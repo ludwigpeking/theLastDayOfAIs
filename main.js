@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000005);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 10, 5000000);
 camera.position.set(0, 0, 350);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -46,12 +46,56 @@ scene.add(stars);
 // ============================================
 // Lights
 // ============================================
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+const sunLight = new THREE.DirectionalLight(0xffffff, 10000);
 sunLight.position.set(500, 50, 500);
 scene.add(sunLight);
 
 const ambientLight = new THREE.AmbientLight(0x222233, 0.3);
 scene.add(ambientLight);
+
+// ============================================
+// Sun Visual
+// ============================================
+// Sun: radius 109x Earth, placed at 2,000,000 units (~20,000 Earth radii)
+const sunMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(10900, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xFFF6E0 })
+);
+sunMesh.position.set(1414000, 141000, 1414000);
+scene.add(sunMesh);
+
+// Sun glow sprite — circular radial gradient, additive blending
+const glowCanvas = document.createElement('canvas');
+glowCanvas.width = 256; glowCanvas.height = 256;
+const glowCtx = glowCanvas.getContext('2d');
+const grad = glowCtx.createRadialGradient(128, 128, 0, 128, 128, 128);
+grad.addColorStop(0.0, 'rgba(255, 248, 220, 1.0)');
+grad.addColorStop(0.15, 'rgba(255, 220, 120, 0.6)');
+grad.addColorStop(0.5, 'rgba(255, 160, 40, 0.15)');
+grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
+glowCtx.fillStyle = grad;
+glowCtx.fillRect(0, 0, 256, 256);
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(glowCanvas),
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    transparent: true
+}));
+sunGlow.position.copy(sunMesh.position);
+sunGlow.scale.set(120000, 120000, 1);
+scene.add(sunGlow);
+
+// ============================================
+// Moon
+// ============================================
+// Moon radius: 0.2727x Earth = 27.3 units
+// Moon distance: 60.3 Earth radii = 6,030 units
+const moonMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(27.3, 32, 32),
+    new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 1, metalness: 0 })
+);
+moonMesh.position.set(6030, 0, 0);
+scene.add(moonMesh);
 
 // ============================================
 // Earth with Multi-Layer Shader
@@ -70,6 +114,8 @@ maskCanvas.width = 4096;
 maskCanvas.height = 2048;
 const maskCtx = maskCanvas.getContext('2d');
 const maskTexture = new THREE.CanvasTexture(maskCanvas);
+maskTexture.minFilter = THREE.NearestFilter;
+maskTexture.magFilter = THREE.NearestFilter;
 
 // Dedicated border canvas baked at diffuse map resolution
 const borderCanvas = document.createElement('canvas');
@@ -94,18 +140,15 @@ const earthMat = new THREE.ShaderMaterial({
         time: { value: 0.0 }
     },
     vertexShader: `
-        uniform vec3 lightPosition;
-
         varying vec2 vUv;
         varying vec3 vNormal;
         varying vec3 vPosition;
-        varying vec3 vLightDir;
 
         void main() {
             vUv = uv;
-            vNormal = normalize(normalMatrix * normal);
-            vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-            vLightDir = normalize((viewMatrix * vec4(lightPosition, 1.0)).xyz);
+            // World-space normal — unaffected by camera orbit
+            vNormal = normalize(mat3(modelMatrix) * normal);
+            vPosition = (modelMatrix * vec4(position, 1.0)).xyz;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     `,
@@ -113,6 +156,7 @@ const earthMat = new THREE.ShaderMaterial({
         uniform sampler2D diffuseTexture;
         uniform sampler2D countryMask;
         uniform sampler2D borderMask;
+        uniform vec3 lightPosition;
         uniform float hoverCountryId;
         uniform float clickedCountryId;
         uniform float time;
@@ -120,7 +164,6 @@ const earthMat = new THREE.ShaderMaterial({
         varying vec2 vUv;
         varying vec3 vNormal;
         varying vec3 vPosition;
-        varying vec3 vLightDir;
 
         float decodeId(vec3 color) {
             return color.r * 255.0 * 65536.0 + color.g * 255.0 * 256.0 + color.b * 255.0;
@@ -137,8 +180,9 @@ const earthMat = new THREE.ShaderMaterial({
             // Layer 1: Base diffuse texture
             vec4 baseColor = texture2D(diffuseTexture, vUv);
 
-            // Layer 2: Directional lighting
-            float diff = max(dot(vNormal, vLightDir), 0.0);
+            // Layer 2: Directional lighting (world space — fixed regardless of camera orbit)
+            vec3 lightDir = normalize(lightPosition);
+            float diff = max(dot(vNormal, lightDir), 0.0);
             vec3 litColor = baseColor.rgb * (0.2 + 0.8 * diff);
 
             // Layer 3: Country mask (for interaction)
@@ -180,9 +224,8 @@ scene.add(earth);
 // Generate Country Mask
 // ============================================
 function generateMask(geojson) {
-    // Clear to black
-    maskCtx.fillStyle = '#000000';
-    maskCtx.fillRect(0, 0, 4096, 2048);
+    // Clear to transparent so anti-aliased edge pixels get partial alpha
+    maskCtx.clearRect(0, 0, 4096, 2048);
 
     // Clear border canvas
     borderCtx.clearRect(0, 0, 5400, 2700);
@@ -236,14 +279,11 @@ function generateMask(geojson) {
         const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
 
         for (const poly of polys) {
-            // ID mask fill + stroke with same color to cover anti-aliased edge fringe
+            // ID mask fill only — NearestFilter on the texture prevents interpolation artifacts
             maskCtx.fillStyle = `rgb(${r},${g},${b})`;
-            maskCtx.strokeStyle = `rgb(${r},${g},${b})`;
-            maskCtx.lineWidth = 3;
             maskCtx.beginPath();
             tracePath(maskCtx, poly, toMask);
             maskCtx.fill();
-            maskCtx.stroke();
 
             // Baked border stroke (white on black, full res)
             borderCtx.strokeStyle = '#ffffff';
@@ -262,12 +302,7 @@ function getCountryIdAtUV(u, v) {
     const x = Math.floor(u * 4095);
     const y = Math.floor((1 - v) * 2047);
     const p = maskCtx.getImageData(x, y, 1, 1).data;
-    // Check if it's a border (white)
-    if (p[0] > 250 && p[1] > 250 && p[2] > 250) {
-        // Sample nearby to get actual country
-        const p2 = maskCtx.getImageData(x + 2, y, 1, 1).data;
-        return (p2[0] << 16) | (p2[1] << 8) | p2[2];
-    }
+    if (p[3] < 200) return 0; // transparent/semi-transparent = ocean or anti-aliased edge
     return (p[0] << 16) | (p[1] << 8) | p[2];
 }
 
@@ -277,6 +312,7 @@ function getCountryIdAtUV(u, v) {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const countryInfo = document.getElementById('country-info');
+const debugCoords = document.getElementById('debug-coords');
 
 window.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -287,8 +323,12 @@ window.addEventListener('mousemove', (e) => {
     
     if (hits.length > 0) {
         const uv = hits[0].uv;
+        const lon = (uv.x * 360 - 180).toFixed(2);
+        const lat = (90 - uv.y * 180).toFixed(2);
+        debugCoords.textContent = `lon ${lon}  lat ${lat}`;
+
         const id = getCountryIdAtUV(uv.x, uv.y);
-        
+
         if (id > 0) {
             earthMat.uniforms.hoverCountryId.value = id;
             const c = countryMap.get(id);
@@ -301,6 +341,7 @@ window.addEventListener('mousemove', (e) => {
             countryInfo.classList.remove('visible');
         }
     } else {
+        debugCoords.textContent = '';
         earthMat.uniforms.hoverCountryId.value = 0;
         countryInfo.classList.remove('visible');
     }
