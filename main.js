@@ -90,6 +90,7 @@ const earthMat = new THREE.ShaderMaterial({
         borderMask: { value: borderTexture },
         lightPosition: { value: sunLight.position },
         hoverCountryId: { value: 0.0 },
+        clickedCountryId: { value: 0.0 },
         time: { value: 0.0 }
     },
     vertexShader: `
@@ -113,6 +114,7 @@ const earthMat = new THREE.ShaderMaterial({
         uniform sampler2D countryMask;
         uniform sampler2D borderMask;
         uniform float hoverCountryId;
+        uniform float clickedCountryId;
         uniform float time;
 
         varying vec2 vUv;
@@ -121,7 +123,7 @@ const earthMat = new THREE.ShaderMaterial({
         varying vec3 vLightDir;
 
         float decodeId(vec3 color) {
-            return color.r * 255.0 + color.g * 255.0 * 256.0 + color.b * 255.0 * 65536.0;
+            return color.r * 255.0 * 65536.0 + color.g * 255.0 * 256.0 + color.b * 255.0;
         }
 
         vec3 idToColor(float id) {
@@ -149,17 +151,22 @@ const earthMat = new THREE.ShaderMaterial({
                 litColor = mix(litColor, countryColor, 0.15);
             }
 
-            // Layer 5: Baked border texture
-            float border = texture2D(borderMask, vUv).r;
-            vec3 borderColor = vec3(0.8, 0.9, 1.0);
-            litColor = mix(litColor, borderColor, border * 0.7);
-
-            // Layer 6: Country highlight on hover
-            if (countryId > 0.0 && abs(countryId - hoverCountryId) < 0.5) {
+            // Layer 5: Country highlight on hover
+            if (countryId > 0.0 && hoverCountryId > 0.0 && abs(countryId - hoverCountryId) < 0.5) {
                 vec3 highlightColor = vec3(1.0, 0.8, 0.2);
                 litColor = mix(litColor, highlightColor, 0.4);
                 litColor += highlightColor * 0.2;
             }
+
+            // Layer 6: Clicked country brightening
+            if (countryId > 0.0 && clickedCountryId > 0.0 && abs(countryId - clickedCountryId) < 0.5) {
+                litColor = mix(litColor, vec3(1.0), 0.4);
+            }
+
+            // Layer 7: Baked border texture (after brightening so borders stay crisp)
+            float border = texture2D(borderMask, vUv).r;
+            vec3 borderColor = vec3(0.8, 0.9, 1.0);
+            litColor = mix(litColor, borderColor, border * 0.7);
 
             gl_FragColor = vec4(litColor, 1.0);
         }
@@ -229,11 +236,14 @@ function generateMask(geojson) {
         const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
 
         for (const poly of polys) {
-            // ID mask fill
+            // ID mask fill + stroke with same color to cover anti-aliased edge fringe
             maskCtx.fillStyle = `rgb(${r},${g},${b})`;
+            maskCtx.strokeStyle = `rgb(${r},${g},${b})`;
+            maskCtx.lineWidth = 3;
             maskCtx.beginPath();
             tracePath(maskCtx, poly, toMask);
             maskCtx.fill();
+            maskCtx.stroke();
 
             // Baked border stroke (white on black, full res)
             borderCtx.strokeStyle = '#ffffff';
@@ -293,6 +303,21 @@ window.addEventListener('mousemove', (e) => {
     } else {
         earthMat.uniforms.hoverCountryId.value = 0;
         countryInfo.classList.remove('visible');
+    }
+});
+
+window.addEventListener('click', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObject(earth);
+
+    if (hits.length > 0) {
+        const id = getCountryIdAtUV(hits[0].uv.x, hits[0].uv.y);
+        earthMat.uniforms.clickedCountryId.value = id > 0 ? id : 0;
+    } else {
+        earthMat.uniforms.clickedCountryId.value = 0;
     }
 });
 
