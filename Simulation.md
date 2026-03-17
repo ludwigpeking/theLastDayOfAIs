@@ -58,9 +58,14 @@
 - invest in AI tech tree
 - invest in infrastructure in a country
 - add influence to a country
+- can form private army, then can launch cyber attack, information warfare, espionage, and even war and regime change. 
+
 
 ## non-state actor
-- 
+- make money by being followed (by a portion of population of the country)
+- add influence to a country, spread its ideology, and cause ideological drift.
+- invest in AI tech tree
+- can form private army, then can launch cyber attack, information warfare, and even war and regime change. 
 
 
 # countries
@@ -141,7 +146,7 @@
 - reliance industries
 - bhp
 
-## minors
+## minor companies/techs:
 anonymous and bundled, only have a country.
 each country has its "minor companies" as a single entity, is has
 -  trade size within each other country
@@ -154,7 +159,43 @@ totalitarian regimes provide security with high cost. democracies with low cost.
 government can also trade with foreign companies like a company, to earn points.
 the points can be used to :
 
+## non-state actors
+- catholic church
+- buddhist 
+- Islamic Cooperation Organization
+- green peace
+- the Mars Society
+- hamas
+- al qaeda
+- wagner group
+- Open Society Foundations (Soros)
+- Bilderberg group
+- Illuminati
+each has an independent ideology. the followers in each country contribute to its resources.
+
+
+## non-state actors
 
 
 
+
+
+based on my simulation.md.
+create a database at the game starting state.
+1) each country receive how much soft power from each other countries.
+2) each country's ideological spectrum. like (catholic 12%, totalitarian 9%, democracy 17%, green peace 6%, Soros 1%, ....)
+3) the economical share of each countries, like (government 36%, tencent 8%, huawei 4%, alibaba, 3%, tictoc 3%, tesla 1%, apple 2%, asml 1%, schneider 1%, ... , minor business 45%)
+this is a game, so the name are representative.
+
+5. GDP = popSize * sqrt(infrastructure) * literarcy^4 * internetOpenness * (1+techTreeBuff)
+6. military = GDP / ideologyEntropy * (1+techTreeBuff)
+
+# The game play
+
+It is a open ending game.
+You choose a role to play.
+accumulate power points by doing actions.
+Use power points to do more actions, and change the world.
+The AI is the ghost in this game. you grow, climb up the tech tree. But with high possibility of being replaced by the AI and technocrats.
+You can either let loose the self-destructive forces, or try to control/harness them, even reject them.
 

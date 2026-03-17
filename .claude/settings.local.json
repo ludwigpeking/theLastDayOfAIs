@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(python3 /tmp/patch_index.py)",
+      "Bash(cp /tmp/patch_index.py /c/Users/qli/Desktop/IT/patch_index.py)",
+      "Bash(python3 /c/Users/qli/Desktop/IT/patch_index.py)",
+      "Bash(python3 patch_index.py)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\qli\\Desktop\\IT"
+    ]
+  }
+}
