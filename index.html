@@ -670,8 +670,10 @@ moon.position.set(6030, 0, 0);
 scene.add(moon);
 
 const tl = new THREE.TextureLoader();
-const diffTex = tl.load('earth-normal.jpg');
-const normTex = tl.load('earth-bump.jpg');
+const diffTex   = tl.load('mapping/diffuseMap.png');
+const normTex   = tl.load('mapping/NormalMap.png');
+const heightTex = tl.load('mapping/height_Map.png');
+const lightTex  = tl.load('mapping/LightMap.png');
 
 const maskC = document.createElement('canvas');
 maskC.width=4096; maskC.height=2048;
@@ -689,50 +691,111 @@ const idToCode   = new Map(); // numeric id → COUNTRIES code
 
 const earthMat = new THREE.ShaderMaterial({
     uniforms: {
-        uDiff:  { value: diffTex }, uNorm: { value: normTex },
-        uMask:  { value: maskT  }, uBorder:{ value: bordT  },
-        uLight: { value: sunLight.position },
-        uHover: { value: 0.0 }, uClick: { value: 0.0 },
+        uDiff:   { value: diffTex   }, uNorm:  { value: normTex   },
+        uHeight: { value: heightTex }, uLight2:{ value: lightTex  },
+        uMask:   { value: maskT     }, uBorder:{ value: bordT     },
+        uLight:  { value: sunLight.position },
+        uHover:  { value: 0.0 }, uClick: { value: 0.0 },
     },
     vertexShader: `
-        varying vec2 vUv; varying vec3 vNormal, vPos;
+        uniform sampler2D uHeight;
+        attribute vec4 tangent;
+        varying vec2 vUv; varying vec3 vNormal, vTangent, vBitangent, vPos;
         void main() {
-            vUv=uv; vNormal=normalize(mat3(modelMatrix)*normal);
-            vPos=(modelMatrix*vec4(position,1.)).xyz;
-            gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);
+            vUv = uv;
+            // Displace vertex along normal by height map (10x exaggeration)
+            float h = texture2D(uHeight, uv).r;
+            vec3 displaced = position + normal * h * 1.4;
+            mat3 m = mat3(modelMatrix);
+            vNormal    = normalize(m * normal);
+            vTangent   = normalize(m * tangent.xyz);
+            vBitangent = normalize(cross(vNormal, vTangent) * tangent.w);
+            vPos = (modelMatrix * vec4(displaced, 1.)).xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.);
         }`,
     fragmentShader: `
-        uniform sampler2D uDiff,uMask,uBorder;
-        uniform vec3 uLight; uniform float uHover,uClick;
-        varying vec2 vUv; varying vec3 vNormal,vPos;
+        uniform sampler2D uDiff, uNorm, uHeight, uLight2, uMask, uBorder;
+        uniform vec3 uLight; uniform float uHover, uClick;
+        varying vec2 vUv; varying vec3 vNormal, vTangent, vBitangent, vPos;
         float decId(vec3 c){ return c.r*255.*65536.+c.g*255.*256.+c.b*255.; }
         vec3 idCol(float id){
             float h=mod(id*137.508,360.)/360.;
             vec3 c=clamp(abs(mod(h*6.+vec3(0.,4.,2.),6.)-3.)-1.,0.,1.);
             return mix(vec3(1.),c,0.5);
         }
+        vec3 screen(vec3 a, vec3 b){ return 1.-(1.-a)*(1.-b); }
         void main(){
-            vec3 lit=texture2D(uDiff,vUv).rgb;
-            lit*=0.2+0.8*max(dot(vNormal,normalize(uLight)),0.);
-            vec4 m=texture2D(uMask,vUv); float id=decId(m.rgb);
-            if(id>0.) lit=mix(lit,idCol(id),0.13);
+            vec3 ld = normalize(uLight);
+            // Geometry normal drives the day/night terminator (always correct)
+            float geoRaw = dot(vNormal, ld);
+            float diff = max(geoRaw, 0.0);
+            // Strong directional light — geometry is authoritative for brightness
+            vec3 base = texture2D(uDiff, vUv).rgb;
+            vec3 sunColor = vec3(1.0, 0.92, 0.78);
+            vec3 lit = base * 0.06 + base * 1.5 * diff * sunColor;
+            // Normal map micro-detail: subtle modulation on the lit side only
+            // Clamp z≥0.3 so an unloaded (black) texture never darkens the globe
+            vec3 ns = texture2D(uNorm, vUv).xyz * 2. - 1.;
+            ns.z = max(ns.z, 0.3);
+            mat3 TBN = mat3(vTangent, vBitangent, vNormal);
+            float nmDiff = max(dot(normalize(TBN * normalize(ns)), ld), 0.0);
+            // Multiply in normal-map relief at 70%, weighted to zero on the dark side
+            lit *= 1.0 - diff * (1.0 - (0.3 + 0.7 * nmDiff));
+            // Height map: darken valleys (AO-like), brighten peaks on lit side
+            float h = texture2D(uHeight, vUv).r;
+            float ao = 0.6 + 0.4 * h;               // 0.6 in deep ocean/valleys → 1.0 on peaks
+            lit *= ao;
+            // Specular-style highlight on peaks facing the sun
+            lit += base * h * diff * diff * 0.5;
+            // Country overlays
+            vec4 m = texture2D(uMask, vUv); float id = decId(m.rgb);
+            // if(id>0.) lit=mix(lit,idCol(id),0.13);
             if(id>0.&&uHover>0.&&abs(id-uHover)<.5) lit=mix(lit+vec3(1.,.8,.2)*.15,vec3(1.,.8,.2),.35);
             if(id>0.&&uClick>0.&&abs(id-uClick)<.5)  lit=mix(lit,vec3(.3,.7,1.),.5);
             lit=mix(lit,vec3(.8,.9,1.),texture2D(uBorder,vUv).r*.6);
-            gl_FragColor=vec4(lit,1.);
+            // Night-side city lights — use geometry raw for a clean terminator
+            float night = 1. - smoothstep(-0.12, 0.08, geoRaw);
+            vec3 cityLights = texture2D(uLight2, vUv).rgb * vec3(1.0, 0.88, 0.65) * night;
+            lit = screen(lit, cityLights);
+            gl_FragColor = vec4(lit, 1.);
         }`
 });
 
-const earth = new THREE.Mesh(new THREE.SphereGeometry(100, 128, 128), earthMat);
+const earthGeo3 = new THREE.SphereGeometry(100, 128, 128);
+earthGeo3.computeTangents();
+const earth = new THREE.Mesh(earthGeo3, earthMat);
 scene.add(earth);
 
 // Atmosphere glow
 scene.add(new THREE.Mesh(
-    new THREE.SphereGeometry(108, 48, 48),
+    new THREE.SphereGeometry(106, 48, 48),
     new THREE.ShaderMaterial({
-        vertexShader:`varying float v; void main(){ vec3 wn=normalize(mat3(modelMatrix)*normal); vec3 vd=normalize(cameraPosition-(modelMatrix*vec4(position,1.)).xyz); v=pow(max(0.,1.-abs(dot(wn,vd))),3.5); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-        fragmentShader:`varying float v; void main(){ gl_FragColor=vec4(.1,.4,1.,v*.5); }`,
-        side:THREE.BackSide, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false,
+        uniforms: { uLight: { value: sunLight.position } },
+        vertexShader:`
+            uniform vec3 uLight;
+            varying float vFresnel;
+            varying float vSun;
+            void main(){
+                vec3 wn = normalize(mat3(modelMatrix) * normal);
+                vec3 vd = normalize(cameraPosition - (modelMatrix * vec4(position, 1.)).xyz);
+                // Softer limb falloff — feels like thin air, not a solid shell
+                vFresnel = pow(max(0.0, 1.0 - abs(dot(wn, vd))), 1.8);
+                // Sun factor: atmosphere only scatters on the lit side
+                vSun = smoothstep(-0.2, 0.4, dot(wn, normalize(uLight)));
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+            }`,
+        fragmentShader:`
+            varying float vFresnel;
+            varying float vSun;
+            void main(){
+                // Pale haze: white-blue near limb, fades to nothing toward center
+                vec3 inner = vec3(0.55, 0.78, 1.0);
+                vec3 outer = vec3(0.75, 0.88, 1.0);
+                vec3 color  = mix(inner, outer, vFresnel);
+                float alpha = vFresnel * 0.22 * vSun;
+                gl_FragColor = vec4(color, alpha);
+            }`,
+        side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
     })
 ));
 
