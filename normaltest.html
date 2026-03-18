@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Normal Map Test</title>
+    <style>
+        body { margin: 0; background: #000; color: #ccc; font-family: monospace; font-size: 13px; }
+        #ui { position: fixed; top: 12px; left: 12px; z-index: 10; background: #0009; padding: 10px 14px; border-radius: 6px; }
+        label { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+        input[type=range] { width: 160px; }
+        .val { width: 44px; text-align: right; color: #7df; }
+    </style>
+</head>
+<body>
+<div id="ui">
+    <b>Sphere rotation</b>
+    <label>X <input type="range" id="rx" min="-180" max="180" value="0"> <span class="val" id="rxv">0°</span></label>
+    <label>Y <input type="range" id="ry" min="-180" max="180" value="0"> <span class="val" id="ryv">0°</span></label>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 3);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const normTex = new THREE.TextureLoader().load('mapping/NormalMap.png');
+normTex.colorSpace = THREE.NoColorSpace;
+
+const geo = new THREE.SphereGeometry(1, 128, 128);
+geo.computeTangents();
+
+const mat = new THREE.ShaderMaterial({
+    uniforms: {
+        uNorm:  { value: normTex },
+        uLight: { value: new THREE.Vector3(1, 0, 0) },
+    },
+    vertexShader: `
+        attribute vec4 tangent;
+        varying vec2 vUv;
+        varying vec3 vNormal, vTangent, vBitangent;
+        void main() {
+            vUv = uv;
+            mat3 m = mat3(modelMatrix);
+            vNormal    = normalize(m * normal);
+            vTangent   = normalize(m * tangent.xyz);
+            vBitangent = normalize(cross(vNormal, vTangent) * tangent.w);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+        }`,
+    fragmentShader: `
+        uniform sampler2D uNorm;
+        uniform vec3 uLight;
+        varying vec2 vUv;
+        varying vec3 vNormal, vTangent, vBitangent;
+        void main() {
+            vec3 ld = normalize(uLight);
+
+            vec3 nsRaw = texture2D(uNorm, vUv).xyz;
+            float isLand = step(0.05, length(nsRaw)); // 0 = sea (black), 1 = land
+
+            // Land: use normal map. Sea: flat tangent-space normal (0,0,1) = sphere geometry
+            vec3 ns = mix(vec3(0.0, 0.0, 1.0), nsRaw * 2.0 - 1.0, isLand);
+
+            mat3 TBN = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));
+            float diff = max(dot(normalize(TBN * ns), ld), 0.0);
+            gl_FragColor = vec4(vec3(diff), 1.);
+        }`,
+});
+
+const mesh = new THREE.Mesh(geo, mat);
+scene.add(mesh);
+
+// ── Rotation handles ──────────────────────────────────────────────────────────
+const D2R = Math.PI / 180;
+['rx','ry'].forEach(id => {
+    const slider = document.getElementById(id);
+    slider.addEventListener('input', () => {
+        document.getElementById(id + 'v').textContent = slider.value + '°';
+        mesh.rotation.set(
+            +document.getElementById('rx').value * D2R,
+            +document.getElementById('ry').value * D2R,
+            0
+        );
+    });
+});
+
+window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+});
+(function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>

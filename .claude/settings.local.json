@@ -5,7 +5,9 @@
       "Bash(python3 /tmp/patch_index.py)",
       "Bash(cp /tmp/patch_index.py /c/Users/qli/Desktop/IT/patch_index.py)",
       "Bash(python3 /c/Users/qli/Desktop/IT/patch_index.py)",
-      "Bash(python3 patch_index.py)"
+      "Bash(python3 patch_index.py)",
+      "Bash(grep -n \"^//\" /c/Users/qli/Desktop/IT/2603_theLastDayOfAIs/main.js)",
+      "Bash(python gen_normal.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\qli\\Desktop\\IT"
