@@ -567,7 +567,7 @@ const TC_NT=TC_MAX_TIER+1, TC_NC=TC_MAX_COL+1;
 const TC_BW=114,TC_BH=62,TC_EW=380,TC_EH=434,TC_GX=12,TC_GY=16,TC_PAD=40;
 const TC_DPR=window.devicePixelRatio||1;
 
-let techOpen=false, speakUtter=null;
+let activeTab='earth', speakUtter=null;
 let tcCV=null,tcCtx=null,tcWrap=null,tcCardLayer=null;
 let tcCP='dem',tcSelNode=null;
 let tcT={x:16,y:16,s:1},tcDrag=false,tcDS={x:0,y:0},tcTS={x:0,y:0},tcInited=false;
@@ -714,13 +714,32 @@ function tcInit(){
     tcSelNode=(hit&&tcSelNode&&hit.id===tcSelNode.id)?null:hit;tcDraw();tcUpdateCard();
   });
 }
-window.toggleTech = function() {
-  techOpen=!techOpen;
-  document.getElementById('tech-overlay').classList.toggle('off',!techOpen);
-  document.getElementById('btn-tech').style.display=techOpen?'none':'block';
-  if (!techOpen) { stopSpeech(); tcSelNode=null; }
-  else { tcInit(); tcSetPolity(getPolityKey(G.regime)); tcFitView(); }
+window.showTab = function(tab) {
+    activeTab = tab;
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('tb-' + tab);
+    if (btn) btn.classList.add('active');
+    // Hide all boards
+    document.getElementById('tech-overlay').classList.add('off');
+    document.getElementById('board-domestic').classList.add('off');
+    document.getElementById('board-ledger').classList.add('off');
+    // Show requested board
+    if (tab === 'tech') {
+        document.getElementById('tech-overlay').classList.remove('off');
+        tcInit(); tcSetPolity(getPolityKey(G.regime)); tcFitView();
+    } else if (tab === 'domestic') {
+        document.getElementById('board-domestic').classList.remove('off');
+        renderDomestic();
+    } else if (tab === 'ledger') {
+        document.getElementById('board-ledger').classList.remove('off');
+        renderLedger();
+    } else {
+        stopSpeech(); tcSelNode = null;
+    }
 };
+// Keep toggleTech as alias for backward compatibility with any remaining calls
+window.toggleTech = function() { showTab(activeTab === 'tech' ? 'earth' : 'tech'); };
 
 // AI-voice descriptions — poetic, chilling, written as the voice of the technology itself
 const AI_VOICE_DESC = {
@@ -989,7 +1008,7 @@ function stopSpeech() {
     speakUtter = null;
 }
 
-function renderTechTree() { if(techOpen){ tcDraw(); tcUpdateCard(); } }
+function renderTechTree() { if(activeTab==='tech'){ tcDraw(); tcUpdateCard(); } }
 
 window.confirmResearch = function(id, cost) {
     const tech = TC_NM[id];
@@ -1067,7 +1086,78 @@ function triggerEndgame(){
 // ═══════════════════════════════════════════
 //  GLOBE INIT  (wires 3D globe ↔ game logic)
 // ═══════════════════════════════════════════
-window.addEventListener('keydown', e => { if (e.key === 'Escape') stopSpeech(); });
+window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { stopSpeech(); if (activeTab !== 'earth') showTab('earth'); }
+});
+
+// ═══════════════════════════════════════════
+//  DOMESTIC BOARD
+// ═══════════════════════════════════════════
+function renderDomestic() {
+    const el = document.getElementById('dom-body');
+    if (!G.role) { el.innerHTML = '<p style="color:#3a5a6a;padding:32px">Start the simulation first.</p>'; return; }
+    const c = G.playerCode ? COUNTRIES[G.playerCode] : null;
+    const gdp = c ? c.gdp : '—';
+    const mil = c ? c.military : '—';
+    const factionC = c && c.faction ? COUNTRIES[c.faction] : null;
+    const techCount = G.techs ? G.techs.size || G.techs.length || 0 : 0;
+    el.innerHTML = `
+        <div class="dom-hdr">
+            <div class="dom-flag">${c ? c.f : '🔷'}</div>
+            <div>
+                <div class="dom-name">${G.roleName}</div>
+                <span class="regime-pill rp-${G.regime}">${G.regime.replace('_',' ')}</span>
+                ${factionC ? `<span style="margin-left:10px;font-size:0.72rem;color:#3a5a6a">Aligned to ${factionC.f} ${factionC.name}</span>` : ''}
+            </div>
+        </div>
+        <div class="dom-section-title">STATISTICS</div>
+        <div class="dom-stats">
+            <div class="dom-stat"><span class="dom-k">POWER POINTS</span><span class="dom-v">${G.pp}</span></div>
+            <div class="dom-stat"><span class="dom-k">AGI PROGRESS</span><span class="dom-v">${G.agi}%</span></div>
+            <div class="dom-stat"><span class="dom-k">TECHS RESEARCHED</span><span class="dom-v">${techCount}</span></div>
+            <div class="dom-stat"><span class="dom-k">TURN / YEAR</span><span class="dom-v">${G.turn} / ${2024+G.turn}</span></div>
+            ${c ? `
+            <div class="dom-stat"><span class="dom-k">GDP</span><span class="dom-v">${gdp}</span></div>
+            <div class="dom-stat"><span class="dom-k">MILITARY</span><span class="dom-v">${mil}</span></div>
+            <div class="dom-stat"><span class="dom-k">POPULATION</span><span class="dom-v">${c.pop}M</span></div>
+            <div class="dom-stat"><span class="dom-k">INFRASTRUCTURE</span><span class="dom-v">${c.infra}%</span></div>
+            <div class="dom-stat"><span class="dom-k">LITERACY</span><span class="dom-v">${Math.round(c.lit*100)}%</span></div>
+            <div class="dom-stat"><span class="dom-k">INTERNET ACCESS</span><span class="dom-v">${Math.round(c.net*100)}%</span></div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// ═══════════════════════════════════════════
+//  LEDGER BOARD
+// ═══════════════════════════════════════════
+function renderLedger() {
+    const el = document.getElementById('ledger-body');
+    const sorted = Object.values(COUNTRIES).sort((a, b) => b.gdp - a.gdp);
+    const rows = sorted.map(c => {
+        const you = G.playerCode === c.code;
+        const fC = c.faction ? COUNTRIES[c.faction] : null;
+        return `<tr class="${you ? 'ldg-you' : ''}">
+            <td style="font-size:1.3rem">${c.f}</td>
+            <td>${c.name}${you ? ' <span style="font-size:0.6rem;color:#4a9eff">▶ YOU</span>' : ''}</td>
+            <td><span class="regime-pill rp-${c.regime}">${c.regime.replace('_',' ')}</span></td>
+            <td class="ldg-num">${c.gdp}</td>
+            <td class="ldg-num">${c.military}</td>
+            <td class="ldg-num">${c.pop}M</td>
+            <td style="color:#3a5a6a">${c.type}</td>
+            <td>${fC ? fC.f + ' ' + fC.name : '—'}</td>
+        </tr>`;
+    }).join('');
+    el.innerHTML = `
+        <table class="ldg-table">
+            <thead><tr>
+                <th></th><th>NATION / ENTITY</th><th>REGIME</th>
+                <th class="ldg-num">GDP</th><th class="ldg-num">MILITARY</th>
+                <th class="ldg-num">POPULATION</th><th>TYPE</th><th>ALIGNED TO</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
 
 initGlobe({
     onReady:          () => { showScreen('intro'); typeStory(); },
@@ -1076,7 +1166,7 @@ initGlobe({
                           else window.closeCountryPanel();
                       },
     isInteractive:    () => !!G.role,
-    isTechOpen:       () => techOpen,
+    isTechOpen:       () => activeTab !== 'earth',
     getCountryLabel:  (code, fallback) => code && COUNTRIES[code]
                           ? `${COUNTRIES[code].f} ${COUNTRIES[code].name}`
                           : (fallback || '?'),

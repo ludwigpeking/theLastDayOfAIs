@@ -60,6 +60,12 @@
 
 <!-- HUD -->
 <div id="hud" style="display:none">
+    <div id="tab-bar">
+        <button class="tab-btn active" id="tb-earth"    onclick="showTab('earth')">EARTH</button>
+        <button class="tab-btn"        id="tb-tech"     onclick="showTab('tech')">TECH TREE</button>
+        <button class="tab-btn"        id="tb-domestic" onclick="showTab('domestic')">DOMESTIC</button>
+        <button class="tab-btn"        id="tb-ledger"   onclick="showTab('ledger')">LEDGER</button>
+    </div>
     <div id="hud-top">
         <div>
             <div id="hud-title">THE LAST DAY OF AIs</div>
@@ -76,7 +82,6 @@
         </div>
     </div>
 
-    <button id="btn-tech" onclick="toggleTech()">TECH TREE ▸</button>
     <div id="tech-overlay" class="off">
         <div id="tc-hdr">
             <div class="tc-logo">AGI / <em>Tech Tree</em></div>
@@ -91,7 +96,7 @@
                 <button class="tc-zbtn" id="tc-zi">+</button>
                 <button class="tc-zbtn" id="tc-zo">−</button>
                 <button class="tc-zbtn" id="tc-zr" style="font-size:9px">FIT</button>
-                <button id="tc-close-btn" onclick="toggleTech()">✕ CLOSE</button>
+                <button id="tc-close-btn" onclick="showTab('earth')">✕ EARTH</button>
             </div>
         </div>
         <div id="tc-wrap">
@@ -124,6 +129,16 @@
         <div class="pu-body" id="pu-body"></div>
         <div class="pu-fx" id="pu-fx"></div>
         <button class="btn" onclick="closePopup()">ACKNOWLEDGE</button>
+    </div>
+
+    <!-- DOMESTIC BOARD -->
+    <div id="board-domestic" class="board off">
+        <div class="brd-body" id="dom-body"></div>
+    </div>
+
+    <!-- LEDGER BOARD -->
+    <div id="board-ledger" class="board off">
+        <div class="brd-body" id="ledger-body"></div>
     </div>
 </div>
 
