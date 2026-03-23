@@ -74,18 +74,26 @@ export function initGlobe({ onReady, onClick, isInteractive, isTechOpen, getCoun
     const maxAniso = renderer.capabilities.getMaxAnisotropy();
     [diffTex, heightTex, lightTex].forEach(t => { t.anisotropy = maxAniso; });
 
-    // Country mask canvas
+    // Country mask canvas (kept as canvas — needed for getImageData CPU picking)
     const maskC = document.createElement('canvas');
     maskC.width = 4096;  maskC.height = 2048;
-    maskX = maskC.getContext('2d');
+    maskX = maskC.getContext('2d', { willReadFrequently: true });
     maskT = new THREE.CanvasTexture(maskC);
     maskT.minFilter = maskT.magFilter = THREE.NearestFilter;
 
-    // Border canvas
+    // Border: try pre-baked file first (loaded directly to GPU — no canvas needed).
+    // Falls back to a CanvasTexture drawn from GeoJSON if file is absent.
+    let resolveBordReady;
+    const bordReady = new Promise(res => { resolveBordReady = res; });
+    bordT = tl.load('mapping/border.png',
+        () => { console.log('[globe] border.png loaded from file'); resolveBordReady(false); },
+        undefined,
+        () => { console.warn('[globe] border.png missing — will draw from GeoJSON'); resolveBordReady(true); }
+    );
+    // Canvas kept only for the GeoJSON fallback path
     const bordC = document.createElement('canvas');
-    bordC.width = 16384;  bordC.height = 8192;
+    bordC.width = 4096;  bordC.height = 2048;
     bordX = bordC.getContext('2d');
-    bordT = new THREE.CanvasTexture(bordC);
 
     // Earth material — MeshPhongMaterial patched for night-side city lights
     earthMat = new THREE.MeshPhongMaterial({
@@ -208,11 +216,11 @@ gl_FragColor = vec4(outgoingLight, diffuseColor.a);`
     ));
 
     // ── Build country mask + border texture from GeoJSON ─────────────────────
-    function buildMask(geo) {
+    function buildMask(geo, drawBorder = true) {
         maskX.clearRect(0, 0, 4096, 2048);
-        bordX.clearRect(0, 0, 16384, 8192);
-        const toM = (lon, lat) => ({ x: ((lon+180)/360)*4096,  y: ((90-lat)/180)*2048 });
-        const toB = (lon, lat) => ({ x: ((lon+180)/360)*16384, y: ((90-lat)/180)*8192 });
+        if (drawBorder) bordX.clearRect(0, 0, 4096, 2048);
+        const toM = (lon, lat) => ({ x: ((lon+180)/360)*4096, y: ((90-lat)/180)*2048 });
+        const toB = toM;  // same resolution as mask
         const trace = (ctx, poly, proj) => {
             const o = poly[0], f = proj(o[0][0], o[0][1]);
             ctx.moveTo(f.x, f.y);
@@ -235,10 +243,11 @@ gl_FragColor = vec4(outgoingLight, diffuseColor.a);`
             const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
             for (const poly of polys) {
                 maskX.fillStyle = `rgb(${r},${g},${b})`; maskX.beginPath(); trace(maskX, poly, toM); maskX.fill();
-                bordX.strokeStyle = '#fff'; bordX.lineWidth = 0.35; bordX.beginPath(); trace(bordX, poly, toB); bordX.stroke();
+                if (drawBorder) { bordX.strokeStyle = '#fff'; bordX.lineWidth = 0.35; bordX.beginPath(); trace(bordX, poly, toB); bordX.stroke(); }
             }
         });
-        maskT.needsUpdate = true;  bordT.needsUpdate = true;
+        maskT.needsUpdate = true;
+        if (drawBorder) bordT.needsUpdate = true;
     }
 
     function pickId(u, v) {
@@ -315,9 +324,52 @@ gl_FragColor = vec4(outgoingLight, diffuseColor.a);`
         renderer.render(scene, camera);
     })();
 
-    // ── Load GeoJSON then signal ready ───────────────────────────────────────
-    fetch('./geoData/world-countries.json')
-        .then(r => r.json()).then(data => buildMask(data)).catch(() => {})
+    // ── Load pre-baked textures if available, else draw from GeoJSON ─────────
+    function loadImageToCanvas(src, ctx, tex) {
+        return new Promise(res => {
+            const img = new Image();
+            img.onload  = () => { ctx.drawImage(img, 0, 0); tex.needsUpdate = true; res(true); };
+            img.onerror = () => res(false);
+            img.src = src;
+        });
+    }
+
+    async function initTextures() {
+        // Fetch GeoJSON, load mask canvas, and wait for border result — all in parallel
+        const [geo, maskOk, bordFallback] = await Promise.all([
+            fetch('./geoData/world-countries.json').then(r => r.json()),
+            loadImageToCanvas('mapping/mask.png', maskX, maskT),
+            bordReady,
+        ]);
+
+        if (maskOk && !bordFallback) {
+            // Both pre-baked files loaded — skip all drawing, just build metadata
+            console.log('[globe] Pre-baked textures active — skipping GeoJSON drawing');
+            geo.features.forEach((f, i) => {
+                const raw = f.properties.ADMIN || f.properties.name || f.properties.NAME || '';
+                const id = i + 1;
+                countryMap.set(id, raw);
+                const code = resolveCountry(raw);
+                if (code) idToCode.set(id, code);
+            });
+        } else {
+            // Fallback: draw from GeoJSON polygons
+            console.warn('[globe] Falling back to GeoJSON drawing (maskOk=' + maskOk + ' bordFallback=' + bordFallback + ')');
+            if (bordFallback) {
+                // Switch uBorder uniform to the fallback canvas texture
+                const canvasBordT = new THREE.CanvasTexture(bordC);
+                bordT = canvasBordT;
+                if (earthShader) earthShader.uniforms.uBorder.value = canvasBordT;
+            }
+            buildMask(geo, bordFallback);
+        }
+    }
+
+    initTextures()
+        .catch(() => {
+            fetch('./geoData/world-countries.json')
+                .then(r => r.json()).then(data => buildMask(data)).catch(() => {});
+        })
         .finally(() => {
             document.getElementById('loading').style.display = 'none';
             onReady();

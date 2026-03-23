@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Texture Generator</title>
+    <style>
+        body { background:#0a1a2a; color:#7aaac8; font-family:monospace; padding:24px; }
+        h2 { color:#4a9eff; }
+        button { background:#1a3a5a; color:#7aaac8; border:1px solid #2a5a8a; padding:8px 18px; cursor:pointer; font-size:1rem; margin:6px; }
+        button:hover { background:#2a5a8a; }
+        button:disabled { opacity:0.4; cursor:default; }
+        #log { margin-top:16px; font-size:0.85rem; line-height:1.8; color:#3a8a6a; }
+        .err { color:#e05050; }
+        .ok  { color:#00d4aa; }
+        canvas { display:none; }
+    </style>
+</head>
+<body>
+<h2>Globe Texture Pre-Baker</h2>
+<p>Generates <code>mapping/mask.png</code> and <code>mapping/border.png</code> from the GeoJSON. Run once, save both files.</p>
+<button id="btn" onclick="generate()">Generate textures</button>
+<div id="log"></div>
+
+<canvas id="maskC" width="4096"  height="2048"></canvas>
+<canvas id="bordC" width="16384" height="8192"></canvas>
+
+<script>
+const log = msg => {
+    const el = document.getElementById('log');
+    el.innerHTML += `<div>${msg}</div>`;
+};
+
+function download(canvas, filename) {
+    canvas.toBlob(blob => {
+        const a = Object.assign(document.createElement('a'), {
+            href: URL.createObjectURL(blob),
+            download: filename,
+        });
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }, 'image/png');
+}
+
+async function generate() {
+    document.getElementById('btn').disabled = true;
+    log('Fetching GeoJSON…');
+
+    let geo;
+    try {
+        geo = await fetch('./geoData/world-countries.json').then(r => r.json());
+        log(`<span class="ok">✓ Loaded ${geo.features.length} features</span>`);
+    } catch(e) {
+        log(`<span class="err">✗ Could not load GeoJSON: ${e.message}</span>`);
+        document.getElementById('btn').disabled = false;
+        return;
+    }
+
+    const maskC = document.getElementById('maskC');
+    const bordC = document.getElementById('bordC');
+    const maskX = maskC.getContext('2d', { willReadFrequently: true });
+    const bordX = bordC.getContext('2d');
+
+    maskX.clearRect(0, 0, 4096, 2048);
+    bordX.clearRect(0, 0, 16384, 8192);
+
+    const toM = (lon, lat) => ({ x: ((lon+180)/360)*4096,  y: ((90-lat)/180)*2048 });
+    const toB = (lon, lat) => ({ x: ((lon+180)/360)*16384, y: ((90-lat)/180)*8192 });
+
+    const trace = (ctx, poly, proj) => {
+        const o = poly[0], f = proj(o[0][0], o[0][1]);
+        ctx.moveTo(f.x, f.y);
+        for (let j = 1; j < o.length; j++) { const p = proj(o[j][0], o[j][1]); ctx.lineTo(p.x, p.y); }
+        ctx.closePath();
+        for (let h = 1; h < poly.length; h++) {
+            const hole = poly[h], hf = proj(hole[0][0], hole[0][1]);
+            ctx.moveTo(hf.x, hf.y);
+            for (let j = 1; j < hole.length; j++) { const p = proj(hole[j][0], hole[j][1]); ctx.lineTo(p.x, p.y); }
+            ctx.closePath();
+        }
+    };
+
+    log('Drawing polygons…');
+    geo.features.forEach((f, i) => {
+        const id = i + 1;
+        const r = (id >> 16) & 0xFF, g = (id >> 8) & 0xFF, b = id & 0xFF;
+        const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+        for (const poly of polys) {
+            maskX.fillStyle = `rgb(${r},${g},${b})`; maskX.beginPath(); trace(maskX, poly, toM); maskX.fill();
+            bordX.strokeStyle = '#fff'; bordX.lineWidth = 0.35; bordX.beginPath(); trace(bordX, poly, toB); bordX.stroke();
+        }
+    });
+
+    log(`<span class="ok">✓ Done. Downloading…</span>`);
+    download(maskC, 'mask.png');
+    download(bordC, 'border.png');
+    log(`<span class="ok">✓ Save both files into the <strong>mapping/</strong> folder.</span>`);
+    document.getElementById('btn').disabled = false;
+}
+</script>
+</body>
+</html>
