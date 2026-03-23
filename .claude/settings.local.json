@@ -8,7 +8,8 @@
       "Bash(python3 patch_index.py)",
       "Bash(grep -n \"^//\" /c/Users/qli/Desktop/IT/2603_theLastDayOfAIs/main.js)",
       "Bash(python gen_normal.py)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(node -e \":*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\qli\\Desktop\\IT"

@@ -2,8 +2,26 @@
 import { initGlobe, setGlobeClick } from './globe.js';
 import { initTechTree, tcInit, tcDraw, tcUpdateCard, tcSetPolity, tcFitView, stopSpeech, getPolityKey, clearTcSelection } from './techTree.js';
 
+// Load game data from external JSON files
+const [_ideoJson, CORPS] = await Promise.all([
+    fetch('./data/ideo.json').then(r => r.json()),
+    fetch('./data/economy.json').then(r => r.json()),
+]);
+function _deriveSizes(group) {
+    return _ideoJson.columns.filter(c => c.group === group).map(c => ({
+        id: c.id, name: c.name, ico: c.ico, type: c.type,
+        sizes: Object.fromEntries(
+            Object.entries(_ideoJson.data)
+                .filter(([k, v]) => k !== '_comment' && v[c.col] > 0)
+                .map(([k, v]) => [k, v[c.col]])
+        ),
+    }));
+}
+const NSAS            = _deriveSizes('nsa');
+const POLITY_FACTIONS = _deriveSizes('pol');
+
 // ═══════════════════════════════════════════
-//  GAME DATA  (sourced from game_start_state.sql & tech_trees.sql)
+//  GAME DATA
 // ═══════════════════════════════════════════
 
 const STORY_INTRO = `The emergence of Artificial General Intelligence presents a transformative shock to the established power structures of modern human communities.
@@ -20,12 +38,12 @@ function calcGdp(pop, infra, lit, internet) {
     return +(pop * Math.sqrt(infra) * Math.pow(lit,4) * internet).toFixed(1);
 }
 
-// Countries exactly as in game_start_state.sql
+// Countries
 const COUNTRIES = {
-  USA: { code:'USA', name:'United States',   f:'🇺🇸', regime:'democracy',      type:'major', faction:null,  pop:341,   infra:88, lit:0.99, net:0.86 },
-  CHN: { code:'CHN', name:'China',           f:'🇨🇳', regime:'authoritarian',  type:'major', faction:null,  pop:1410,  infra:83, lit:0.97, net:0.52 },
+  USA: { code:'USA', name:'United States',   f:'🇺🇸', regime:'democracy',      type:'major', faction:null,  pop:341,   infra:88, lit:0.99, net:0.95 },
+  CHN: { code:'CHN', name:'China',           f:'🇨🇳', regime:'authoritarian',  type:'major', faction:null,  pop:1410,  infra:81, lit:0.97, net:0.25 },
   IND: { code:'IND', name:'India',           f:'🇮🇳', regime:'democracy',      type:'major', faction:null,  pop:1430,  infra:62, lit:0.79, net:0.58 },
-  EU:  { code:'EU',  name:'European Union',  f:'🇪🇺', regime:'democracy',      type:'major', faction:null,  pop:449,   infra:84, lit:0.98, net:0.83 },
+  EU:  { code:'EU',  name:'European Union',  f:'🇪🇺', regime:'democracy',      type:'major', faction:null,  pop:449,   infra:83, lit:0.98, net:0.81 },
   RUS: { code:'RUS', name:'Russia',          f:'🇷🇺', regime:'authoritarian',  type:'minor', faction:'CHN', pop:144,   infra:68, lit:0.98, net:0.44 },
   UKR: { code:'UKR', name:'Ukraine',         f:'🇺🇦', regime:'democracy',      type:'minor', faction:'EU',  pop:37,    infra:58, lit:0.98, net:0.72 },
   BRA: { code:'BRA', name:'Brazil',          f:'🇧🇷', regime:'democracy',      type:'minor', faction:'USA', pop:216,   infra:61, lit:0.94, net:0.70 },
@@ -122,44 +140,6 @@ const MINORS  = Object.keys(COUNTRIES).filter(k => COUNTRIES[k].type === 'minor'
 const BIG_TECH = ['Google','Microsoft','OpenAI','Tesla/SpaceX','Apple','NVIDIA','TikTok','Alibaba','Tencent','Huawei','ASML','TSMC','Samsung','Schneider','ARM','Sony','Saudi Aramco','SK Hynix','Tata','Reliance Industries','BHP'];
 const NSA_LIST = ['Catholic Church','Islamic Cooperation Org.','Buddhist Networks','Open Society (Soros)','The Mars Society','Greenpeace','Wagner Group','Bilderberg Group','Hamas','Al-Qaeda'];
 
-// shares = % of country GDP captured by the corp
-const CORPS = [
-  { id:'google',    name:'Google',           ico:'🔍', type:'AI / Cloud',    shares:{USA:3.2,EU:1.8,GBR:1.5,CAN:1.4,AUS:1.2,JPN:1.0,KOR:0.8,IND:0.5,BRA:0.6,SGP:1.0} },
-  { id:'microsoft', name:'Microsoft',        ico:'🪟', type:'AI / Cloud',    shares:{USA:2.8,EU:1.6,GBR:1.4,CAN:1.2,AUS:1.1,JPN:0.9,KOR:0.7,IND:0.6,BRA:0.5,SGP:0.9} },
-  { id:'openai',    name:'OpenAI',           ico:'🤖', type:'AGI',           shares:{USA:0.8,EU:0.3,GBR:0.3,CAN:0.2,AUS:0.2,JPN:0.1} },
-  { id:'tesla',     name:'Tesla / SpaceX',   ico:'🚀', type:'Energy / Space',shares:{USA:1.2,EU:0.6,CHN:0.4,AUS:0.3,CAN:0.4,GBR:0.3} },
-  { id:'apple',     name:'Apple',            ico:'🍎', type:'Hardware',      shares:{USA:3.5,CHN:1.8,EU:1.5,GBR:1.3,JPN:1.0,AUS:1.1,CAN:1.2,KOR:0.5,SGP:0.8} },
-  { id:'nvidia',    name:'NVIDIA',           ico:'💚', type:'AI Hardware',   shares:{USA:1.5,TWN:2.0,KOR:1.2,JPN:0.8,EU:0.5,CHN:0.6,SGP:0.6} },
-  { id:'tiktok',    name:'TikTok',           ico:'🎵', type:'Media',         shares:{USA:0.5,EU:0.4,IND:0.3,BRA:0.4,IDN:0.3,PHL:0.3,VNM:0.3,MEX:0.3,NGA:0.2} },
-  { id:'alibaba',   name:'Alibaba',          ico:'🛒', type:'E-Commerce',    shares:{CHN:4.0,SGP:2.0,IDN:1.5,VNM:1.0,PHL:0.8,MYS:1.2} },
-  { id:'tencent',   name:'Tencent',          ico:'🎮', type:'Media / AI',    shares:{CHN:3.5,SGP:1.5,VNM:0.8,IDN:0.7,KOR:0.5} },
-  { id:'huawei',    name:'Huawei',           ico:'📡', type:'Telecom',       shares:{CHN:3.0,PAK:2.0,ETH:2.5,COD:2.0,BGD:1.8,RUS:1.5,IRN:2.0,NGA:1.2} },
-  { id:'asml',      name:'ASML',             ico:'🔬', type:'Chipmaking',    shares:{TWN:3.0,KOR:2.5,USA:1.0,EU:1.2,JPN:1.0,SGP:1.5} },
-  { id:'tsmc',      name:'TSMC',             ico:'💻', type:'Chipmaking',    shares:{TWN:8.0,USA:1.2,JPN:0.8,SGP:1.0} },
-  { id:'samsung',   name:'Samsung',          ico:'📱', type:'Hardware',      shares:{KOR:6.0,USA:1.0,EU:0.8,IND:1.2,VNM:2.5,IDN:0.8} },
-  { id:'schneider', name:'Schneider Elec.',  ico:'⚡', type:'Energy Mgmt',   shares:{EU:0.8,USA:0.5,IND:0.4,CHN:0.6,BRA:0.4,SGP:0.6,AUS:0.3} },
-  { id:'arm',       name:'ARM',              ico:'🔧', type:'Chip Design',   shares:{GBR:2.0,USA:1.0,KOR:0.8,TWN:1.5,CHN:0.6,JPN:0.6} },
-  { id:'sony',      name:'Sony',             ico:'🎬', type:'Media / Tech',  shares:{JPN:2.5,USA:0.6,EU:0.5,KOR:0.4,SGP:0.5} },
-  { id:'aramco',    name:'Saudi Aramco',     ico:'⛽', type:'Energy',        shares:{SAU:35.0,CHN:1.5,IND:1.8,JPN:0.8,KOR:0.8,USA:0.4,EU:0.3} },
-  { id:'skhynix',   name:'SK Hynix',         ico:'💾', type:'Memory',        shares:{KOR:4.5,CHN:0.8,USA:0.5,TWN:1.0} },
-  { id:'tata',      name:'Tata Group',       ico:'🏭', type:'Conglomerate',  shares:{IND:3.5,GBR:0.8,SGP:1.0,AUS:0.3,USA:0.3,EU:0.2} },
-  { id:'reliance',  name:'Reliance Ind.',    ico:'🏗️', type:'Conglomerate',  shares:{IND:5.0,SGP:0.5} },
-  { id:'bhp',       name:'BHP',              ico:'⛏️', type:'Mining',        shares:{AUS:6.0,CHN:0.8,IND:0.4,BRA:0.5,USA:0.3} },
-];
-
-// sizes = ideological fraction of population aligned in each country
-const NSAS = [
-  { id:'catholic',  name:'Catholic Church',        ico:'✝️', type:'Religion',     sizes:{BRA:0.65,MEX:0.85,PHL:0.82,EU:0.40,USA:0.21,GBR:0.10,AUS:0.22,CAN:0.32} },
-  { id:'islamic',   name:'Islamic Cooperation',    ico:'☪️', type:'Religion',     sizes:{IDN:0.87,PAK:0.97,BGD:0.90,IRN:0.99,TUR:0.98,EGY:0.94,SAU:0.99,NGA:0.50,ETH:0.34,IND:0.14} },
-  { id:'buddhist',  name:'Buddhist Networks',      ico:'☸️', type:'Religion',     sizes:{CHN:0.18,JPN:0.38,KOR:0.16,VNM:0.08,IND:0.08,SGP:0.33} },
-  { id:'opensoc',   name:'Open Society (Soros)',   ico:'🌐', type:'Liberal NGO',  sizes:{USA:0.05,EU:0.08,GBR:0.05,UKR:0.12,IND:0.02,BRA:0.04} },
-  { id:'mars',      name:'The Mars Society',       ico:'🚀', type:'Futurist',     sizes:{USA:0.02,EU:0.01,AUS:0.01,CAN:0.01} },
-  { id:'green',     name:'Greenpeace',             ico:'🌿', type:'Env. NGO',     sizes:{EU:0.05,USA:0.03,AUS:0.04,CAN:0.03,GBR:0.04,JPN:0.02,BRA:0.03} },
-  { id:'wagner',    name:'Wagner Group',           ico:'⚔️', type:'Paramilitary', sizes:{RUS:0.08,ETH:0.05,COD:0.06,NGA:0.04,UKR:0.03} },
-  { id:'bilder',    name:'Bilderberg Group',       ico:'🎩', type:'Elitist',      sizes:{USA:0.01,EU:0.01,GBR:0.01,CAN:0.01,SGP:0.01} },
-  { id:'hamas',     name:'Hamas',                  ico:'🕊️', type:'Resistance',  sizes:{ISR:0.02,EGY:0.01,JOR:0.03} },
-  { id:'alqaeda',   name:'Al-Qaeda',               ico:'⚠️', type:'Jihadist',    sizes:{PAK:0.04,IRN:0.01,SAU:0.01,EGY:0.02,NGA:0.03,IDN:0.01} },
-];
 
 function corpRevenue(corp) {
     return Object.entries(corp.shares).reduce((s,[k,sh]) => {
@@ -578,7 +558,7 @@ function sortArrow(sub, col) {
 window.ldgSortBy = function(sub, col) {
     const s = ldgSort[sub];
     if (s.col === col) s.dir = s.dir === 'asc' ? 'desc' : 'asc';
-    else { s.col = col; s.dir = 'desc'; }
+    else { s.col = col; s.dir = col === 'name' || col === 'regime' || col === 'type' || col === 'sector' ? 'asc' : 'desc'; }
     showLedgerTab(sub);
 };
 
@@ -596,9 +576,14 @@ window.showLedgerTab = function(sub) {
 
     if (sub === 'countries') {
         const s = ldgSort.countries;
-        const key = {gdp:'gdp',mil:'military',pop:'pop',infra:'infra',lit:'lit',net:'net'}[s.col] || 'gdp';
+        const strCols = { name:'name', regime:'regime' };
+        const numKeys = {gdp:'gdp',mil:'military',pop:'pop',infra:'infra',lit:'lit',net:'net'};
         const rows = Object.values(COUNTRIES)
-            .sort((a,b) => s.dir==='asc' ? a[key]-b[key] : b[key]-a[key])
+            .sort((a,b) => {
+                if (strCols[s.col]) return s.dir==='asc' ? a[strCols[s.col]].localeCompare(b[strCols[s.col]]) : b[strCols[s.col]].localeCompare(a[strCols[s.col]]);
+                const key = numKeys[s.col] || 'gdp';
+                return s.dir==='asc' ? a[key]-b[key] : b[key]-a[key];
+            })
             .map(c => {
                 const you = G.playerCode === c.code;
                 const fC = c.faction ? COUNTRIES[c.faction] : null;
@@ -617,7 +602,7 @@ window.showLedgerTab = function(sub) {
                 </tr>`;
             }).join('');
         el.innerHTML = `<table class="ldg-table"><thead><tr>
-            <th></th><th>NATION</th><th>REGIME</th>
+            <th></th>${th('NATION','name')}${th('REGIME','regime')}
             ${th('GDP','gdp')}${th('MILITARY','mil')}${th('POPULATION','pop')}
             ${th('INFRA','infra')}${th('LITERACY','lit')}${th('INTERNET','net')}
             <th>TYPE</th><th>ALIGNED TO</th>
@@ -626,9 +611,12 @@ window.showLedgerTab = function(sub) {
     } else if (sub === 'corps') {
         const s = ldgSort.corps;
         const data = CORPS.map(corp => ({ corp, rev: parseFloat(corpRevenue(corp)) }));
-        data.sort((a,b) => s.col==='rev' ? (s.dir==='asc'?a.rev-b.rev:b.rev-a.rev)
-                         : s.col==='mkts' ? (s.dir==='asc'?Object.keys(a.corp.shares).length-Object.keys(b.corp.shares).length:Object.keys(b.corp.shares).length-Object.keys(a.corp.shares).length)
-                         : 0);
+        data.sort((a,b) => {
+            if (s.col==='name')  return s.dir==='asc' ? a.corp.name.localeCompare(b.corp.name)  : b.corp.name.localeCompare(a.corp.name);
+            if (s.col==='sector')return s.dir==='asc' ? a.corp.type.localeCompare(b.corp.type)  : b.corp.type.localeCompare(a.corp.type);
+            if (s.col==='mkts')  return s.dir==='asc' ? Object.keys(a.corp.shares).length - Object.keys(b.corp.shares).length : Object.keys(b.corp.shares).length - Object.keys(a.corp.shares).length;
+            return s.dir==='asc' ? a.rev-b.rev : b.rev-a.rev;
+        });
         const rows = data.map(({corp, rev}) => {
             const you = G.playerCode === corp.name;
             const top = Object.entries(corp.shares).sort((a,b)=>b[1]-a[1])[0];
@@ -642,7 +630,7 @@ window.showLedgerTab = function(sub) {
             </tr>`;
         }).join('');
         el.innerHTML = `<table class="ldg-table"><thead><tr>
-            <th></th><th>CORPORATION</th><th>SECTOR</th>
+            <th></th>${th('CORPORATION','name')}${th('SECTOR','sector')}
             ${th('REVENUE','rev')}${th('MARKETS','mkts')}<th>TOP MARKET</th>
         </tr></thead><tbody>${rows}</tbody></table>
         <p class="ldg-note">Revenue = Σ (country GDP × share%)</p>`;
@@ -650,9 +638,12 @@ window.showLedgerTab = function(sub) {
     } else {
         const s = ldgSort.nonstates;
         const data = NSAS.map(nsa => ({ nsa, eco: parseFloat(nsaEcoSize(nsa)) }));
-        data.sort((a,b) => s.col==='eco' ? (s.dir==='asc'?a.eco-b.eco:b.eco-a.eco)
-                         : s.col==='cnt' ? (s.dir==='asc'?Object.keys(a.nsa.sizes).length-Object.keys(b.nsa.sizes).length:Object.keys(b.nsa.sizes).length-Object.keys(a.nsa.sizes).length)
-                         : 0);
+        data.sort((a,b) => {
+            if (s.col==='name') return s.dir==='asc' ? a.nsa.name.localeCompare(b.nsa.name) : b.nsa.name.localeCompare(a.nsa.name);
+            if (s.col==='type') return s.dir==='asc' ? a.nsa.type.localeCompare(b.nsa.type) : b.nsa.type.localeCompare(a.nsa.type);
+            if (s.col==='cnt')  return s.dir==='asc' ? Object.keys(a.nsa.sizes).length - Object.keys(b.nsa.sizes).length : Object.keys(b.nsa.sizes).length - Object.keys(a.nsa.sizes).length;
+            return s.dir==='asc' ? a.eco-b.eco : b.eco-a.eco;
+        });
         const rows = data.map(({nsa, eco}) => {
             const you = G.playerCode === nsa.name;
             const top = Object.entries(nsa.sizes).sort((a,b)=>b[1]-a[1])[0];
@@ -666,7 +657,7 @@ window.showLedgerTab = function(sub) {
             </tr>`;
         }).join('');
         el.innerHTML = `<table class="ldg-table"><thead><tr>
-            <th></th><th>ORGANIZATION</th><th>TYPE</th>
+            <th></th>${th('ORGANIZATION','name')}${th('TYPE','type')}
             ${th('ECO-SIZE','eco')}${th('COUNTRIES','cnt')}<th>STRONGEST IN</th>
         </tr></thead><tbody>${rows}</tbody></table>
         <p class="ldg-note">Eco-size = 0.1 × Σ (ideological share × country GDP)</p>`;
@@ -690,27 +681,47 @@ function renderLedgerDetail() {
     if (ledgerDetail.type === 'country') {
         const c = COUNTRIES[ledgerDetail.id];
         const fC = c.faction ? COUNTRIES[c.faction] : null;
-        // corps with presence in this country
-        const corpRows = CORPS.filter(corp => corp.shares[c.code])
-            .map(corp => ({ corp, share: corp.shares[c.code], contrib: c.gdp * corp.shares[c.code] / 100 }))
-            .sort((a,b) => b.contrib - a.contrib)
-            .map(({corp,share,contrib}) => `<tr>
-                <td style="font-size:1.2rem">${corp.ico}</td>
-                <td>${corp.name}</td><td class="ldg-dim">${corp.type}</td>
-                <td class="ldg-num">${share}%</td>
-                <td class="ldg-num">${contrib.toFixed(1)}</td>
-            </tr>`).join('') || '<tr><td colspan="5" class="ldg-dim" style="padding:12px">No corporate data</td></tr>';
 
-        // NSAs with presence in this country
-        const nsaRows = NSAS.filter(nsa => nsa.sizes[c.code])
-            .map(nsa => ({ nsa, size: nsa.sizes[c.code], contrib: 0.1 * nsa.sizes[c.code] * c.gdp }))
-            .sort((a,b) => b.contrib - a.contrib)
-            .map(({nsa,size,contrib}) => `<tr>
-                <td style="font-size:1.2rem">${nsa.ico}</td>
-                <td>${nsa.name}</td><td class="ldg-dim">${nsa.type}</td>
+        // --- ECONOMIC STRUCTURE: major corps + government + minor corps ---
+        const allEcon = CORPS.filter(corp => corp.shares[c.code])
+            .map(corp => ({ ico: corp.ico, name: corp.name, type: corp.type, share: corp.shares[c.code], contrib: c.gdp * corp.shares[c.code] / 100 }))
+            .sort((a,b) => b.share - a.share);
+        const econRows = allEcon.map(({ico,name,type,share,contrib}) => `<tr>
+                <td style="font-size:1.2rem">${ico}</td>
+                <td>${name}</td><td class="ldg-dim">${type}</td>
+                <td class="ldg-num">${share}%</td>
+                <td class="ldg-num">${typeof contrib === 'number' ? contrib.toFixed(1) : contrib}</td>
+                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${share}%"></div></div></td>
+            </tr>`).join('');
+
+        // --- IDEOLOGICAL SPECTRUM: NSAs + political factions (full 100%) ---
+        const totalNsaShare = NSAS.reduce((s, nsa) => s + (nsa.sizes[c.code] || 0), 0);
+        const totalPolShare = POLITY_FACTIONS.reduce((s, f) => s + (f.sizes[c.code] || 0), 0);
+        const unaffiliated = Math.max(0, 1 - totalNsaShare - totalPolShare);
+
+        const mkRow = (ico, name, type, size, gdp, dimmed=false) => `<tr${dimmed?' class="ldg-dim"':''}>
+                <td style="font-size:1.2rem">${ico}</td>
+                <td>${name}</td><td class="ldg-dim">${type}</td>
                 <td class="ldg-num">${Math.round(size*100)}%</td>
-                <td class="ldg-num">${contrib.toFixed(1)}</td>
-            </tr>`).join('') || '<tr><td colspan="5" class="ldg-dim" style="padding:12px">No ideological data</td></tr>';
+                <td class="ldg-num">${(0.1 * size * gdp).toFixed(1)}</td>
+                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${(size*100).toFixed(1)}%${dimmed?';opacity:0.35':''}"></div></div></td>
+            </tr>`;
+
+        const nsaRows = NSAS
+            .map(n => ({ n, size: n.sizes[c.code] || 0 }))
+            .sort((a,b) => b.size - a.size)
+            .map(({n, size}) => mkRow(n.ico, n.name, n.type, size, c.gdp))
+            .join('');
+
+        const polRows = POLITY_FACTIONS
+            .map(f => ({ f, size: f.sizes[c.code] || 0 }))
+            .sort((a,b) => b.size - a.size)
+            .map(({f, size}) => mkRow(f.ico, f.name, f.type, size, c.gdp))
+            .join('');
+
+        const sepRow = `<tr><td colspan="6" style="padding:4px 8px;font-size:0.72rem;letter-spacing:0.08em;color:#3a5a6a;border-top:1px solid #1a3a4a">POLITICAL FACTIONS</td></tr>`;
+        const nsaRows_full = nsaRows + sepRow + polRows
+            + (unaffiliated > 0.005 ? mkRow('👤','Unaffiliated','—', unaffiliated, c.gdp, true) : '');
 
         el.innerHTML = `${back}
         <div class="ldg-det-hdr">
@@ -724,10 +735,12 @@ function renderLedgerDetail() {
         <div class="ldg-det-stats">
             ${[['GDP',c.gdp],['Military',c.military],['Population',c.pop+'M'],['Infrastructure',c.infra+'%'],['Literacy',Math.round(c.lit*100)+'%'],['Internet',Math.round(c.net*100)+'%']].map(([k,v])=>`<div class="dom-stat"><span class="dom-k">${k}</span><span class="dom-v">${v}</span></div>`).join('')}
         </div>
-        <div class="ldg-det-section">CORPORATE PRESENCE</div>
-        <table class="ldg-table"><thead><tr><th></th><th>CORPORATION</th><th>SECTOR</th><th class="ldg-num">GDP SHARE</th><th class="ldg-num">CONTRIBUTION</th></tr></thead><tbody>${corpRows}</tbody></table>
+        <div class="ldg-det-section">ECONOMIC STRUCTURE</div>
+        <table class="ldg-table"><thead><tr><th></th><th>ACTOR</th><th>SECTOR</th><th class="ldg-num">GDP SHARE</th><th class="ldg-num">CONTRIBUTION</th><th style="width:140px">SHARE</th></tr></thead><tbody>${econRows}</tbody></table>
+        <p class="ldg-note">Government & Minor Corps shares are stored per country and editable in economy_editor.html.</p>
         <div class="ldg-det-section" style="margin-top:20px">IDEOLOGICAL SPECTRUM</div>
-        <table class="ldg-table"><thead><tr><th></th><th>ORGANIZATION</th><th>TYPE</th><th class="ldg-num">POP. SHARE</th><th class="ldg-num">ECO-WEIGHT</th></tr></thead><tbody>${nsaRows}</tbody></table>`;
+        <table class="ldg-table"><thead><tr><th></th><th>ORGANIZATION / FACTION</th><th>TYPE</th><th class="ldg-num">POP. SHARE</th><th class="ldg-num">ECO-WEIGHT</th><th style="width:140px">SHARE</th></tr></thead><tbody>${nsaRows_full}</tbody></table>
+        <p class="ldg-note">Eco-weight = 0.1 × pop. share × GDP. Political factions subdivide the secular remainder.</p>`;
 
     } else if (ledgerDetail.type === 'corp') {
         const corp = CORPS.find(c => c.id === ledgerDetail.id);

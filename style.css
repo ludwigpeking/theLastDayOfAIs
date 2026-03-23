@@ -212,4 +212,29 @@
 
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(74,158,255,0.18); }
+
+        /* ── DATA EDITORS (ideo_editor.html, economy_editor.html) ── */
+        .ed-page { padding: 24px 28px; min-height: 100vh; overflow: auto; }
+        .ed-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+        .ed-title { font-size: 1.1rem; font-weight: 700; color: #4a9eff; letter-spacing: 0.12em; text-transform: uppercase; margin-right: auto; }
+        .ed-status { font-size: 0.78rem; color: #3a5a6a; }
+        .ed-status.ok  { color: #00d4aa; }
+        .ed-status.err { color: #ff5555; }
+        .ed-wrap { overflow-x: auto; }
+        .ed-table { border-collapse: collapse; font-size: 0.64rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .ed-table th { padding: 2px 3px; font-size: 0.52rem; color: #3a5a6a; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid rgba(74,158,255,0.2); background: rgba(0,0,8,0.97); position: sticky; top: 0; z-index: 2; text-align: center; }
+        .ed-table th.ed-th-country { text-align: left; position: sticky; left: 0; z-index: 3; background: rgba(0,0,8,0.97); }
+        .ed-table td { padding: 1px 1px; border-bottom: 1px solid rgba(74,158,255,0.05); vertical-align: middle; }
+        .ed-table td.ed-td-label { position: sticky; left: 0; background: rgba(0,4,12,0.97); color: #8aa8c0; padding: 1px 5px; font-weight: 500; z-index: 1; }
+        .ed-table tr:hover td { background: rgba(74,158,255,0.04); }
+        .ed-table tr:hover td.ed-td-label { background: rgba(74,158,255,0.08); }
+        .ed-num { width: 41px; background: rgba(0,8,24,0.6); border: 1px solid rgba(74,158,255,0.12); color: #a0c8e8; font-size: 0.64rem; text-align: right; padding: 1px 2px; outline: none; font-family: inherit; }
+        .ed-num:focus { border-color: rgba(74,158,255,0.5); background: rgba(74,158,255,0.06); color: #c8e8ff; }
+        .ed-num.zero { color: #2a3a4a; border-color: rgba(74,158,255,0.05); }
+        .ed-sum { width: 34px; padding: 1px 3px; text-align: right; font-weight: 700; }
+        .ed-sum.sum-ok  { color: #00d4aa; }
+        .ed-sum.sum-bad { color: #ff5555; }
+        .ed-group-sep th { border-top: 2px solid rgba(74,158,255,0.25); }
+        .ed-th-nsa  { color: #7aaac8; }
+        .ed-th-pol  { color: #ff8555; }
     

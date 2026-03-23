@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economy Designer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="overflow:hidden;">
+<div style="display:flex;flex-direction:column;height:100vh;padding:4px 8px;box-sizing:border-box;">
+    <div class="ed-toolbar" style="flex-shrink:0;">
+        <span class="ed-title">Economy Designer</span>
+        <span class="ed-status ok" id="status">Loading…</span>
+        <button class="btn" id="btn-load">Open JSON</button>
+        <button class="btn btn-green" id="btn-save">Save JSON</button>
+    </div>
+    <div style="flex-shrink:0;font-size:0.64rem;color:#3a5a6a;margin-bottom:2px;">
+        Click a <span style="color:#7aaac8;">country header</span> to sort corps rows. Click a <span style="color:#00d4aa;">corp name</span> to sort country columns.
+    </div>
+    <div class="ed-wrap" style="flex:1;overflow:auto;">
+        <table class="ed-table" id="tbl"></table>
+    </div>
+</div>
+
+<script type="module">
+let fileHandle = null;
+let corps = [];
+
+// Row sort: which country column to sort corps by
+let rowSort = { key: null, dir: -1 };   // key = country code | 'name' | 'type'
+// Col sort: which corp row to sort countries by
+let colSort = { key: null, dir: -1 };   // key = corp index | null
+
+const BASE_COUNTRIES = [
+    'USA','CHN','IND','EU','RUS','UKR','JPN','GBR','BRA','CAN','AUS',
+    'KOR','TWN','MEX','PHL','IDN','TUR','SAU','IRN','PAK','EGY','NGA',
+    'COD','ETH','BGD','VNM','ISR','SGP','VUT','PRK'
+];
+const SPECIAL = new Set(['government','minor_corps']);
+
+async function loadFromPath() {
+    try {
+        const r = await fetch('./data/economy.json');
+        corps = await r.json();
+        render();
+        document.getElementById('status').textContent = 'Loaded from data/economy.json';
+    } catch(e) {
+        document.getElementById('status').textContent = 'Could not auto-load — use Open JSON';
+        document.getElementById('status').className = 'ed-status err';
+    }
+}
+
+function toJson() { return JSON.stringify(corps, null, 2); }
+
+function sortedCorps() {
+    return [...corps.map((c,i) => ({c,i}))].sort(({c:a},{c:b}) => {
+        if (rowSort.key === null) return 0;
+        if (rowSort.key === 'name') return rowSort.dir * a.name.localeCompare(b.name);
+        if (rowSort.key === 'type') return rowSort.dir * a.type.localeCompare(b.type);
+        return rowSort.dir * ((a.shares[rowSort.key]??0) - (b.shares[rowSort.key]??0));
+    });
+}
+
+function sortedCountries() {
+    if (colSort.key === null) return BASE_COUNTRIES;
+    const ci = colSort.key;
+    return [...BASE_COUNTRIES].sort((a, b) =>
+        colSort.dir * ((corps[ci]?.shares[a]??0) - (corps[ci]?.shares[b]??0))
+    );
+}
+
+function rowArrow(key) {
+    if (rowSort.key !== key) return '<span style="color:#2a3a4a;margin-left:3px;">⇅</span>';
+    return rowSort.dir === -1
+        ? '<span style="color:#4a9eff;margin-left:3px;">↓</span>'
+        : '<span style="color:#4a9eff;margin-left:3px;">↑</span>';
+}
+
+function colArrow(ci) {
+    if (colSort.key !== ci) return '<span style="color:#2a3a4a;font-size:0.65rem;">⇄</span>';
+    return colSort.dir === -1
+        ? '<span style="color:#00d4aa;font-size:0.65rem;">→</span>'
+        : '<span style="color:#00d4aa;font-size:0.65rem;">←</span>';
+}
+
+const thS = 'cursor:pointer;user-select:none;min-width:28px;max-width:28px;font-size:0.64rem;';
+
+function render() {
+    const tbl = document.getElementById('tbl');
+    const countries = sortedCountries();
+
+    let html = '<thead><tr>';
+    html += `<th class="ed-th-country" data-row-sort="name" style="cursor:pointer;user-select:none;">Corporation${rowArrow('name')}</th>`;
+    html += `<th data-row-sort="type" style="cursor:pointer;user-select:none;min-width:80px;">Type${rowArrow('type')}</th>`;
+    for (const cc of countries) {
+        html += `<th data-row-sort="${cc}" style="${thS}">${cc}${rowArrow(cc)}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    for (const {c: corp, i: ci} of sortedCorps()) {
+        const special = SPECIAL.has(corp.id);
+        const rowStyle = special ? 'style="background:rgba(0,212,170,0.05);border-top:1px solid rgba(0,212,170,0.15);"' : '';
+        html += `<tr ${rowStyle}>`;
+        // Corp name cell — clicking sorts country columns
+        html += `<td class="ed-td-label" data-col-sort="${ci}" style="cursor:pointer;${special?'color:#00d4aa;':''}">${corp.ico} ${corp.name} ${colArrow(ci)}</td>`;
+        html += `<td style="color:#3a5a6a;padding:3px 7px;font-size:0.7rem;">${corp.type}</td>`;
+        for (const cc of countries) {
+            const v = corp.shares[cc] ?? 0;
+            const cls = v === 0 ? 'ed-num zero' : 'ed-num';
+            html += `<td><input type="number" class="${cls}" value="${v===0?'':v}" placeholder="0" min="0" step="0.1" data-ci="${ci}" data-cc="${cc}"></td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</tbody><tfoot><tr style="border-top:2px solid rgba(74,158,255,0.25);">';
+    html += `<td class="ed-td-label" style="color:#3a5a6a;font-size:0.65rem;letter-spacing:0.08em;">TOTAL %</td>`;
+    html += `<td style="color:#3a5a6a;font-size:0.65rem;padding:3px 7px;">—</td>`;
+    for (const cc of countries) {
+        const sum = corps.reduce((s, c) => s + (c.shares[cc] ?? 0), 0);
+        const ok = Math.abs(sum - 100) < 0.6;
+        html += `<td class="ed-sum ${ok ? 'sum-ok' : 'sum-bad'}" id="csum-${cc}">${sum.toFixed(1)}</td>`;
+    }
+    html += '</tr></tfoot>';
+    tbl.innerHTML = html;
+
+    // Row sort: click country column headers
+    tbl.querySelector('thead').addEventListener('click', e => {
+        const th = e.target.closest('th[data-row-sort]');
+        if (!th) return;
+        const key = th.dataset.rowSort;
+        if (rowSort.key === key) rowSort.dir *= -1;
+        else { rowSort.key = key; rowSort.dir = (key==='name'||key==='type') ? 1 : -1; }
+        render();
+    });
+
+    // Col sort: click corp name cells in tbody
+    tbl.querySelector('tbody').addEventListener('click', e => {
+        const td = e.target.closest('td[data-col-sort]');
+        if (!td) return;
+        const ci = +td.dataset.colSort;
+        if (colSort.key === ci) colSort.dir *= -1;
+        else { colSort.key = ci; colSort.dir = -1; }
+        render();
+    });
+
+    tbl.addEventListener('input', onCellInput);
+}
+
+function onCellInput(e) {
+    const inp = e.target;
+    if (inp.dataset.ci === undefined) return;
+    const ci = +inp.dataset.ci;
+    const cc = inp.dataset.cc;
+    const val = parseFloat(inp.value) || 0;
+    if (val === 0) { delete corps[ci].shares[cc]; inp.className = 'ed-num zero'; }
+    else           { corps[ci].shares[cc] = val;  inp.className = 'ed-num'; }
+    const sum = corps.reduce((s, c) => s + (c.shares[cc] ?? 0), 0);
+    const ok = Math.abs(sum - 100) < 0.6;
+    const cell = document.getElementById(`csum-${cc}`);
+    if (cell) { cell.textContent = sum.toFixed(1); cell.className = `ed-sum ${ok ? 'sum-ok' : 'sum-bad'}`; }
+}
+
+document.getElementById('btn-load').addEventListener('click', async () => {
+    try {
+        [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: {'application/json': ['.json']} }] });
+        const file = await fileHandle.getFile();
+        corps = JSON.parse(await file.text());
+        render();
+        document.getElementById('status').textContent = `Opened ${file.name}`;
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) { /* cancelled */ }
+});
+
+document.getElementById('btn-save').addEventListener('click', async () => {
+    const json = toJson();
+    try {
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: 'economy.json',
+                types: [{ description: 'JSON', accept: {'application/json': ['.json']} }],
+            });
+        }
+        const w = await fileHandle.createWritable();
+        await w.write(json);
+        await w.close();
+        document.getElementById('status').textContent = 'Saved ✓';
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) {
+        const a = Object.assign(document.createElement('a'), {
+            href: 'data:application/json,' + encodeURIComponent(json),
+            download: 'economy.json',
+        });
+        a.click();
+    }
+});
+
+loadFromPath();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDEO Designer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="overflow:hidden;">
+<div style="display:flex;flex-direction:column;height:100vh;padding:4px 8px;box-sizing:border-box;">
+    <div class="ed-toolbar" style="flex-shrink:0;">
+        <span class="ed-title">Ideology Designer</span>
+        <span class="ed-status" id="status">Loading…</span>
+        <button class="btn" id="btn-load">Open JSON</button>
+        <button class="btn btn-green" id="btn-save">Save JSON</button>
+    </div>
+    <div class="ed-wrap" style="flex:1;overflow:auto;">
+        <table class="ed-table" id="tbl"></table>
+    </div>
+</div>
+
+<script type="module">
+let fileHandle = null;
+let cols = [];
+let data = {};
+let sortKey = null;   // 'country' | column index (number) | 'sum'
+let sortDir = 1;      // 1 = asc, -1 = desc
+
+async function loadFromPath() {
+    try {
+        const r = await fetch('./data/ideo.json');
+        const json = await r.json();
+        ingest(json);
+        document.getElementById('status').textContent = 'Loaded from data/ideo.json';
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) {
+        document.getElementById('status').textContent = 'Could not auto-load — use Open JSON';
+        document.getElementById('status').className = 'ed-status err';
+    }
+}
+
+function ingest(json) {
+    cols = json.columns;
+    data = {};
+    for (const [k, v] of Object.entries(json.data)) {
+        if (k !== '_comment') data[k] = [...v];
+    }
+    render();
+}
+
+function toJson() {
+    const out = { columns: cols, data: { _comment: 'cols: ' + cols.map(c => c.id).join('  ') } };
+    for (const [k, v] of Object.entries(data)) out.data[k] = v;
+    // Keep data arrays on one line
+    return JSON.stringify(out, null, 2)
+        .replace(/\[\n\s+(-?[\d.]+(?:,\n\s+-?[\d.]+)*)\n\s+\]/g,
+            (_, nums) => '[' + nums.replace(/\s*\n\s*/g, ' ') + ']');
+}
+
+function rowSum(arr) {
+    return arr.reduce((s, v) => s + v, 0);
+}
+
+function sortedCountries() {
+    const keys = Object.keys(data);
+    if (sortKey === null) return keys;
+    return [...keys].sort((a, b) => {
+        let va, vb;
+        if (sortKey === 'country') {
+            va = a; vb = b;
+            return sortDir * va.localeCompare(vb);
+        } else if (sortKey === 'sum') {
+            va = rowSum(data[a]); vb = rowSum(data[b]);
+        } else {
+            va = data[a][sortKey]; vb = data[b][sortKey];
+        }
+        return sortDir * (va - vb);
+    });
+}
+
+function arrow(key) {
+    if (sortKey !== key) return '<span style="color:#2a3a4a;margin-left:4px;">⇅</span>';
+    return sortDir === 1
+        ? '<span style="color:#4a9eff;margin-left:4px;">↓</span>'
+        : '<span style="color:#4a9eff;margin-left:4px;">↑</span>';
+}
+
+function render() {
+    const tbl = document.getElementById('tbl');
+    const nsaCols = cols.filter(c => c.group === 'nsa');
+    const polCols = cols.filter(c => c.group === 'pol');
+    const thStyle = 'cursor:pointer;user-select:none;min-width:47px;max-width:47px;white-space:normal;line-height:1.3;font-size:0.64rem;';
+
+    let html = '<thead>';
+    // Group header row
+    html += '<tr class="ed-group-sep">';
+    html += '<th class="ed-th-country">Country</th>';
+    html += `<th class="ed-th-nsa" colspan="${nsaCols.length}">— Non-State Actors —</th>`;
+    html += `<th class="ed-th-pol" colspan="${polCols.length}">— Political Factions —</th>`;
+    html += '<th></th>';
+    html += '</tr>';
+    // Column name row
+    html += '<tr>';
+    html += `<th class="ed-th-country" data-sort="country" style="cursor:pointer;user-select:none;">Country${arrow('country')}</th>`;
+    for (const c of cols) {
+        const cls = c.group === 'nsa' ? 'ed-th-nsa' : 'ed-th-pol';
+        html += `<th class="${cls}" data-sort="${c.col}" title="${c.type}" style="${thStyle}">${c.name}${arrow(c.col)}</th>`;
+    }
+    html += `<th data-sort="sum" style="cursor:pointer;user-select:none;">Sum${arrow('sum')}</th>`;
+    html += '</tr>';
+    html += '</thead><tbody>';
+
+    for (const code of sortedCountries()) {
+        const row = data[code];
+        const sum = rowSum(row);
+        const sumOk = Math.abs(sum - 1) < 0.005;
+        html += `<tr data-code="${code}">`;
+        html += `<td class="ed-td-label">${code}</td>`;
+        for (let i = 0; i < cols.length; i++) {
+            const v = row[i];
+            const cls = v === 0 ? 'ed-num zero' : 'ed-num';
+            html += `<td><input type="number" class="${cls}" value="${v.toFixed(2)}" min="0" max="1" step="0.01" data-code="${code}" data-col="${i}"></td>`;
+        }
+        html += `<td class="ed-sum ${sumOk ? 'sum-ok' : 'sum-bad'}" id="sum-${code}">${sum.toFixed(2)}</td>`;
+        html += '</tr>';
+    }
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.addEventListener('input', onCellInput);
+    tbl.querySelector('thead').addEventListener('click', e => {
+        const th = e.target.closest('th[data-sort]');
+        if (!th) return;
+        const key = th.dataset.sort === 'country' ? 'country'
+                  : th.dataset.sort === 'sum'     ? 'sum'
+                  : +th.dataset.sort;
+        if (sortKey === key) sortDir *= -1;
+        else { sortKey = key; sortDir = -1; }  // default: high-to-low
+        render();
+    });
+    updateGlobalStatus();
+}
+
+function onCellInput(e) {
+    const inp = e.target;
+    if (!inp.dataset.code) return;
+    const code = inp.dataset.code;
+    const col = +inp.dataset.col;
+    const val = Math.max(0, Math.min(1, parseFloat(inp.value) || 0));
+    data[code][col] = val;
+
+    // style input
+    inp.className = val === 0 ? 'ed-num zero' : 'ed-num';
+
+    // update sum cell
+    const sum = rowSum(data[code]);
+    const sumOk = Math.abs(sum - 1) < 0.005;
+    const sumCell = document.getElementById(`sum-${code}`);
+    sumCell.textContent = sum.toFixed(2);
+    sumCell.className = `ed-sum ${sumOk ? 'sum-ok' : 'sum-bad'}`;
+
+    updateGlobalStatus();
+}
+
+function updateGlobalStatus() {
+    const bad = Object.keys(data).filter(k => Math.abs(rowSum(data[k]) - 1) >= 0.005);
+    const el = document.getElementById('status');
+    if (bad.length === 0) {
+        el.textContent = `All ${Object.keys(data).length} countries sum to 1.00 ✓`;
+        el.className = 'ed-status ok';
+    } else {
+        el.textContent = `${bad.length} countries off: ${bad.join(', ')}`;
+        el.className = 'ed-status err';
+    }
+}
+
+document.getElementById('btn-load').addEventListener('click', async () => {
+    try {
+        [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: {'application/json': ['.json']} }] });
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        ingest(JSON.parse(text));
+        document.getElementById('status').textContent = `Opened ${file.name}`;
+    } catch(e) { /* cancelled */ }
+});
+
+document.getElementById('btn-save').addEventListener('click', async () => {
+    const json = toJson();
+    try {
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: 'ideo.json',
+                types: [{ description: 'JSON', accept: {'application/json': ['.json']} }],
+            });
+        }
+        const w = await fileHandle.createWritable();
+        await w.write(json);
+        await w.close();
+        document.getElementById('status').textContent = 'Saved ✓';
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) {
+        // fallback: download
+        const a = Object.assign(document.createElement('a'), {
+            href: 'data:application/json,' + encodeURIComponent(json),
+            download: 'ideo.json',
+        });
+        a.click();
+    }
+});
+
+loadFromPath();
+</script>
+</body>
+</html>

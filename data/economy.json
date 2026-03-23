@@ -1,0 +1,39 @@
+[
+  {"id":"google",    "name":"Google",          "ico":"🔍", "type":"AI / Cloud",    "shares":{"USA":3.2,"EU":1.8,"GBR":1.5,"CAN":1.4,"AUS":1.2,"JPN":1.0,"KOR":0.8,"IND":0.5,"BRA":0.6,"SGP":1.0,"MEX":0.5,"PHL":0.5,"IDN":0.5,"TUR":0.7,"ISR":0.8,"UKR":0.5,"EGY":0.4,"NGA":0.4,"BGD":0.2,"PAK":0.3,"ETH":0.2,"VNM":0.3,"TWN":0.5,"SAU":0.3,"VUT":0.2,"RUS":0.3}},
+  {"id":"microsoft", "name":"Microsoft",       "ico":"🪟", "type":"AI / Cloud",    "shares":{"USA":2.8,"EU":1.6,"GBR":1.4,"CAN":1.2,"AUS":1.1,"JPN":0.9,"KOR":0.7,"IND":0.6,"BRA":0.5,"SGP":0.9,"MEX":0.4,"PHL":0.4,"IDN":0.4,"TUR":0.6,"ISR":0.7,"UKR":0.4,"EGY":0.3,"NGA":0.3,"BGD":0.2,"PAK":0.3,"VNM":0.3,"TWN":0.5,"SAU":0.4,"VUT":0.2,"RUS":0.3,"CHN":0.5}},
+  {"id":"openai",    "name":"OpenAI",          "ico":"🤖", "type":"AGI",           "shares":{"USA":0.8,"EU":0.3,"GBR":0.3,"CAN":0.2,"AUS":0.2,"JPN":0.1,"ISR":0.2,"TWN":0.2,"KOR":0.2,"SGP":0.2}},
+  {"id":"tesla",     "name":"Tesla / SpaceX",  "ico":"🚀", "type":"Energy / Space","shares":{"USA":1.2,"EU":0.6,"CHN":0.4,"AUS":0.3,"CAN":0.4,"GBR":0.3,"MEX":0.4,"ISR":0.3,"TUR":0.3,"BRA":0.3,"JPN":0.2,"SGP":0.3,"TWN":0.3}},
+  {"id":"apple",     "name":"Apple",           "ico":"🍎", "type":"Hardware",      "shares":{"USA":3.5,"CHN":1.8,"EU":1.5,"GBR":1.3,"JPN":1.0,"AUS":1.1,"CAN":1.2,"KOR":0.5,"SGP":0.8,"IND":1.5,"MEX":0.5,"BRA":0.7,"PHL":0.4,"TUR":0.5,"ISR":0.6,"VNM":0.3,"TWN":0.5,"SAU":0.4,"UKR":0.4,"IDN":0.3,"EGY":0.3,"NGA":0.2}},
+  {"id":"nvidia",    "name":"NVIDIA",          "ico":"💚", "type":"AI Hardware",   "shares":{"USA":1.5,"TWN":2.0,"KOR":1.2,"JPN":0.8,"EU":0.5,"CHN":0.6,"SGP":0.6,"ISR":0.5,"IND":0.3,"AUS":0.2,"CAN":0.3}},
+  {"id":"tiktok",    "name":"TikTok",          "ico":"🎵", "type":"Media",         "shares":{"USA":0.5,"EU":0.4,"BRA":0.4,"IDN":0.3,"PHL":0.3,"VNM":0.3,"MEX":0.3,"NGA":0.2,"TUR":0.4,"EGY":0.3,"SAU":0.4,"PAK":0.4,"BGD":0.3,"COD":0.2,"ETH":0.2,"UKR":0.2,"JPN":0.3,"AUS":0.3,"CAN":0.3,"ISR":0.2,"KOR":0.2,"GBR":0.4,"SGP":0.3,"TWN":0.3}},
+  {"id":"alibaba",   "name":"Alibaba",         "ico":"🛒", "type":"E-Commerce",    "shares":{"CHN":4.0,"SGP":2.0,"IDN":1.5,"VNM":1.0,"PHL":0.8,"RUS":0.6,"IRN":0.8,"BGD":1.0,"PAK":0.8,"ETH":0.8,"COD":0.3,"NGA":0.6,"EGY":0.6,"TUR":0.4,"UKR":0.3,"BRA":0.4,"IND":0.3,"SAU":0.4,"MEX":0.3}},
+  {"id":"tencent",   "name":"Tencent",         "ico":"🎮", "type":"Media / AI",    "shares":{"CHN":3.5,"SGP":1.5,"VNM":0.8,"IDN":0.7,"KOR":0.5,"RUS":0.8,"IRN":0.5,"BGD":0.3,"PAK":0.4,"EGY":0.3,"TUR":0.3,"JPN":0.3}},
+  {"id":"huawei",    "name":"Huawei",          "ico":"📡", "type":"Telecom",       "shares":{"CHN":3.0,"PAK":2.0,"ETH":2.5,"COD":2.0,"BGD":1.8,"RUS":1.5,"IRN":2.0,"NGA":1.2,"TUR":0.5,"EGY":0.8,"UKR":0.2,"VNM":0.5,"IDN":0.5,"SAU":0.3,"BRA":0.3,"PHL":0.4}},
+  {"id":"asml",      "name":"ASML",            "ico":"🔬", "type":"Chipmaking",    "shares":{"TWN":3.0,"KOR":2.5,"USA":1.0,"EU":1.2,"JPN":1.0,"SGP":1.5,"ISR":0.3,"CHN":1.5}},
+  {"id":"tsmc",      "name":"TSMC",            "ico":"💻", "type":"Chipmaking",    "shares":{"TWN":8.0,"USA":1.2,"JPN":0.8,"SGP":1.0,"EU":0.3,"ISR":0.2}},
+  {"id":"samsung",   "name":"Samsung",         "ico":"📱", "type":"Hardware",      "shares":{"KOR":6.0,"USA":1.0,"EU":0.8,"IND":1.2,"VNM":2.5,"IDN":0.8,"BRA":0.8,"MEX":0.6,"PHL":0.6,"TUR":0.8,"ISR":0.3,"UKR":0.3,"EGY":0.5,"NGA":0.5,"BGD":0.8,"PAK":0.4,"ETH":0.4,"COD":0.3,"AUS":0.5,"JPN":0.4,"TWN":0.3,"RUS":0.4,"SAU":0.4,"GBR":0.4,"CAN":0.4,"SGP":0.5}},
+  {"id":"schneider", "name":"Schneider Elec.", "ico":"⚡", "type":"Energy Mgmt",   "shares":{"EU":0.8,"USA":0.5,"IND":0.4,"CHN":0.6,"BRA":0.4,"SGP":0.6,"AUS":0.3,"MEX":0.3,"TUR":0.4,"ISR":0.3,"IDN":0.3,"SAU":0.4,"NGA":0.2,"GBR":0.3,"CAN":0.3,"JPN":0.3,"KOR":0.3,"TWN":0.2}},
+  {"id":"arm",       "name":"ARM",             "ico":"🔧", "type":"Chip Design",   "shares":{"GBR":2.0,"USA":1.0,"KOR":0.8,"TWN":1.5,"CHN":0.6,"JPN":0.6,"ISR":0.3,"EU":0.5,"SGP":0.3,"IND":0.3}},
+  {"id":"sony",      "name":"Sony",            "ico":"🎬", "type":"Media / Tech",  "shares":{"JPN":2.5,"USA":0.6,"EU":0.5,"KOR":0.4,"SGP":0.5,"CHN":0.4,"GBR":0.4,"CAN":0.3,"AUS":0.3,"TWN":0.3}},
+  {"id":"aramco",    "name":"Saudi Aramco",    "ico":"⛽", "type":"Energy",        "shares":{"SAU":35.0,"CHN":1.5,"IND":1.8,"JPN":0.8,"KOR":0.8,"USA":0.4,"EU":0.3,"PAK":0.5,"BGD":0.3,"EGY":0.4,"BRA":0.3,"IDN":0.3,"PHL":0.2,"TWN":0.5,"SGP":0.3,"AUS":0.3}},
+  {"id":"skhynix",   "name":"SK Hynix",        "ico":"💾", "type":"Memory",        "shares":{"KOR":4.5,"CHN":0.8,"USA":0.5,"TWN":1.0,"IND":0.3,"VNM":0.3,"SGP":0.4,"JPN":0.3}},
+  {"id":"tata",      "name":"Tata Group",      "ico":"🏭", "type":"Conglomerate",  "shares":{"IND":3.5,"GBR":0.8,"SGP":1.0,"AUS":0.3,"USA":0.3,"EU":0.2}},
+  {"id":"reliance",  "name":"Reliance Ind.",   "ico":"🏗️", "type":"Conglomerate",  "shares":{"IND":5.0,"SGP":0.5}},
+  {"id":"bhp",       "name":"BHP",             "ico":"⛏️", "type":"Mining",        "shares":{"AUS":6.0,"CHN":0.8,"IND":0.4,"BRA":0.5,"USA":0.3,"NGA":0.2,"JPN":0.3,"KOR":0.4}},
+  {"id":"government","name":"Government",      "ico":"🏛️", "type":"Public Sector",  "shares":{
+    "PRK":92.0,
+    "CHN":53.6,"IRN":55.0,"ETH":48.0,"RUS":50.0,"VNM":42.0,"COD":42.0,"SAU":42.3,
+    "EGY":40.0,"UKR":40.0,"BRA":40.0,"EU":40.3,"GBR":40.0,"CAN":40.0,"NGA":38.0,
+    "JPN":38.0,"IND":35.0,"MEX":36.0,"IDN":36.0,"AUS":36.0,"USA":35.9,"ISR":28.0,
+    "PHL":33.0,"TUR":33.0,"KOR":30.0,"PAK":30.0,"TWN":30.0,"SGP":22.0,"VUT":25.0,
+    "BGD":20.0
+  }},
+  {"id":"minor_corps","name":"Minor Corps & SMEs","ico":"🏢","type":"Private Sector","shares":{
+    "PRK":8.0,
+    "CHN":26.4,"IRN":41.7,"ETH":47.9,"RUS":46.1,"VNM":51.7,"COD":55.2,"SAU":19.7,
+    "EGY":56.1,"UKR":57.7,"BRA":54.8,"EU":48.4,"GBR":50.9,"CAN":54.0,"NGA":58.2,
+    "JPN":50.4,"IND":48.9,"MEX":60.7,"IDN":58.4,"AUS":51.9,"USA":43.8,"ISR":67.3,
+    "PHL":63.4,"TUR":62.1,"KOR":50.2,"PAK":64.9,"TWN":50.9,"SGP":63.8,"VUT":74.6,
+    "BGD":75.1
+  }}
+]
