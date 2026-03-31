@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Bash(sed -n '103,108p' techTree.js)",
+      "Bash(sed -n '815,822p' techTree.js)",
+      "Bash(node --check techTree.js)",
+      "Bash(/tmp/check_tier5.py:*)",
+      "Bash(python /tmp/check_tier5.py)",
+      "Bash(node --check \"c:\\\\Users\\\\qli\\\\Desktop\\\\IT\\\\2603_theLastDayOfAIs\\\\techTree.js\")",
+      "Bash(/tmp/full_grid_analysis.py:*)",
+      "Bash(python /tmp/full_grid_analysis.py)",
+      "Bash(/tmp/missing_nodes.py:*)",
+      "Bash(python /tmp/missing_nodes.py)",
+      "Bash(/tmp/fix_grid2.py:*)",
+      "Bash(python /tmp/fix_grid2.py)",
+      "Bash(python /tmp/verify_grid.py)",
+      "Bash(/tmp/fix_opacity.py:*)",
+      "Bash(python /tmp/fix_opacity.py)",
+      "Bash(python merge_tech_tree.py)",
+      "Bash(node --check \"C:\\\\Users\\\\qli\\\\Desktop\\\\IT\\\\2603_theLastDayOfAIs\\\\techTree.js\")"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}
