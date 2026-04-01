@@ -130,7 +130,7 @@
 - tesla/spacex
 - apple
 - nvidia
-- tictoc
+- meta
 - alibaba
 - tencent
 - huawei
@@ -160,17 +160,21 @@ government can also trade with foreign companies like a company, to earn points.
 the points can be used to :
 
 ## non-state actors
-- catholic church
-- buddhist 
-- Islamic Cooperation Organization
-- green peace
-- the Mars Society
-- hamas
-- al qaeda
-- wagner group
-- Open Society Foundations (Soros)
-- Bilderberg group
-- Illuminati
+
+each non-state is an international ideology group, each with a share in each state.
+non-states goal is too have more state in control. 
+
+- catholic church - democracy traditionalism, anti-AI, event: [AGI banning - forbid higher level AI, defence of the god] 
+- buddhist - non-political, escapism, anti-war
+- Islamic Cooperation Organization - authoritarian traditionalism, anti-AI, event: [AGI banning - forbid higher level AI, defence of the god]
+- green peace - anti-AI, event: [something triggered by dissent from tech disaster - popularity gain from AI warfare and unemployment, total war against AI - controlled states banning AI and war with technocrat controalled states]
+- the Mars Society - techno-optimism, pro-AI, elitist, can trigger the event of colonizing mars
+- hamas // to remove
+- al qaeda - anti-US, endless war with the US
+- wagner group - authoritarian international mafia. banned by all democrats. events: [mercenary war - a state can hire wagner to the war adding military power in risk of wagner growth and coup, coup will result in removal from the state or 3x share in the state] 
+- Open Society Foundations (Soros) - anti-totalitarian, anti-authoritarian. events: [color revolution - can infiltrate a country, no need to exist in it]
+- Bilderberg group -  //to remove
+- Illuminati - pro-AI elitism. events: []
 each has an independent ideology. the followers in each country contribute to its resources.
 
 
@@ -180,12 +184,6 @@ each has an independent ideology. the followers in each country contribute to it
 
 
 
-based on my simulation.md.
-create a database at the game starting state.
-1) each country receive how much soft power from each other countries.
-2) each country's ideological spectrum. like (catholic 12%, totalitarian 9%, democracy 17%, green peace 6%, Soros 1%, ....)
-3) the economical share of each countries, like (government 36%, tencent 8%, huawei 4%, alibaba, 3%, tictoc 3%, tesla 1%, apple 2%, asml 1%, schneider 1%, ... , minor business 45%)
-this is a game, so the name are representative.
 
 5. GDP = popSize * sqrt(infrastructure) * literarcy^4 * internetOpenness * (1+techTreeBuff)
 6. military = GDP / ideologyEntropy * (1+techTreeBuff)
@@ -199,3 +197,31 @@ Use power points to do more actions, and change the world.
 The AI is the ghost in this game. you grow, climb up the tech tree. But with high possibility of being replaced by the AI and technocrats.
 You can either let loose the self-destructive forces, or try to control/harness them, even reject them.
 
+## the roles
+
+1. state leader:
+
+the largest party rules the state, deciding its ideology.
+
+
+The Goal of the states:
+
+totalitarian: keep being totalitarian, reduce the other parties. 
+authoritarian: try to become totalitarian, but maintaining the current level, maintain ligitimacy to prevent a revolution.
+democracy: follow the popular policy
+anarcho-liberal: no policy
+
+
+the state wins the war make the lost state the same ideology as the winner.
+
+2. big tech CEO:
+big tech has revenue
+cost: 
+big tech CEO
+
+## events
+
+### war
+
+the parties 
+offensive war: reduce

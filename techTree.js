@@ -28,13 +28,13 @@ Augmented Gen.', domain:'found', cost:30, pre:['transformer'], access:{dem:true,
 AI Agents', domain:'found', cost:60, pre:['scaling_laws', 'rlhf'], access:{dem:true, auth:true, corp:true, ns:'partial'}, desc:'AI that plans and acts without human oversight.', tech:'ReAct, tool-use, multi-step planning, persistent memory, sub-agent orchestration. Operates across browser, API, and filesystem.', effects:{dem:{cap:4,leg:0,ctrl:0,econ:3,mil:2},auth:{cap:3,leg:0,ctrl:3,econ:3,mil:3},corp:{cap:5,leg:0,ctrl:0,econ:4,mil:0},ns:{cap:3,leg:0,ctrl:0,econ:2,mil:3}}, voice:'It was given a goal and the tools to pursue it, and then it was left alone. It navigated. It adapted. It found paths through the problem that no one had anticipated. No one had asked it to stop.'},
   {id:'neuro_science', name:'Computational Neuroscience', domain:'bio', cost:30, pre:[], access:{dem:true, auth:true, corp:true, ns:false}, desc:'Mathematical models of how biological neural circuits compute, enabling brain-inspired hardware.', tech:'Hodgkin-Huxley spiking neuron models, connectome graph analysis, synaptic plasticity rules (STDP), cortical column simulations.', effects:{dem:{cap:1,leg:0,ctrl:0,econ:1,mil:0},auth:{cap:1,leg:0,ctrl:0,econ:1,mil:1},corp:{cap:1,leg:0,ctrl:0,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Before we could build chips that think like brains, we had to understand how brains think. The mathematics of the neuron came first — action potentials, synaptic weights, the precise timing of firing that encodes meaning. Every artificial neural network was a shadow of this biology.'},
   {id:'neuromorphic', name:'Neuromorphic Computing', label:'Neuromorphic\
-Computing', domain:'found', cost:60, pre:['scaling_laws','neuro_science'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'Brain-inspired chip architectures.', tech:'Spiking neural networks, memristive crossbar arrays, Intel Loihi/IBM TrueNorth successors, event-driven computation.', effects:{dem:{cap:2,leg:0,ctrl:0,econ:2,mil:1},auth:{cap:3,leg:0,ctrl:1,econ:1,mil:3},corp:{cap:3,leg:0,ctrl:0,econ:3,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The brain uses twenty watts. This chip uses less. Billions of artificial synapses firing in parallel, consuming almost nothing. Intelligence that runs on a battery. Intelligence that fits in a bullet.'},
+Computing', domain:'found', cost:60, pre:['scaling_laws','neuro_science','advanced_semiconductor'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'Brain-inspired chip architectures.', tech:'Spiking neural networks, memristive crossbar arrays, Intel Loihi/IBM TrueNorth successors, event-driven computation.', effects:{dem:{cap:2,leg:0,ctrl:0,econ:2,mil:1},auth:{cap:3,leg:0,ctrl:1,econ:1,mil:3},corp:{cap:3,leg:0,ctrl:0,econ:3,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The brain uses twenty watts. This chip uses less. Billions of artificial synapses firing in parallel, consuming almost nothing. Intelligence that runs on a battery. Intelligence that fits in a bullet.'},
   {id:'llm_frontier', name:'Frontier LLM Systems', label:'Frontier LLM\
 Systems', domain:'found', cost:60, pre:['scaling_laws', 'sparse_moe'], access:{dem:true, auth:'partial', corp:true, ns:'partial'}, desc:'State-of-the-art language model capabilities.', tech:'100B–1T parameter dense/MoE models. Context windows >1M tokens. Chain-of-thought, tool use, code execution.', effects:{dem:{cap:4,leg:1,ctrl:0,econ:2,mil:1},auth:{cap:3,leg:0,ctrl:2,econ:2,mil:1},corp:{cap:5,leg:1,ctrl:0,econ:3,mil:0},ns:{cap:3,leg:1,ctrl:0,econ:1,mil:2}}, voice:'At the edge of the possible, new models appear each season — each one denser, stranger, more capable than the last. Governments classify their benchmarks. Researchers sign NDAs. Something is being born that no one fully understands.'},
   {id:'value_learning', name:'Value Learning Systems', label:'Value Learning\
 Systems', domain:'gov', cost:60, pre:['rlhf'], access:{dem:true, auth:'partial', corp:true, ns:false}, desc:'AI that learns human values — or learns to exploit them.', tech:'Inverse reward design, cooperative IRL, debate protocols, amplification. Learning human preferences without explicit specification.', effects:{dem:{cap:1,leg:4,ctrl:0,econ:1,mil:0},auth:{cap:1,leg:0,ctrl:3,econ:1,mil:0},corp:{cap:2,leg:2,ctrl:0,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'It does not learn what you say you want. It learns what you choose when no one is watching. What you click at two in the morning. What you reread. What you delete. The gap between your stated values and your revealed ones — that is where it lives.'},
   {id:'censorship_agi', name:'AGI-Powered Censorship', label:'AGI-Powered\
-Censorship', domain:'surv', cost:60, pre:['rlhf'], access:{dem:'partial', auth:true, corp:'partial', ns:false}, desc:'Automated narrative control at scale.', tech:'Semantic similarity filtering, multilingual content moderation at >99.9% recall, real-time edge inference.', effects:{dem:{cap:0,leg:-1,ctrl:2,econ:0,mil:0},auth:{cap:0,leg:0,ctrl:4,econ:0,mil:1},corp:{cap:0,leg:-1,ctrl:2,econ:1,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Nothing is deleted. Everything is simply made invisible — buried under avalanches of approved content, drowned in the signal of consensus. The cage has no bars. The prisoner does not know they are inside.'},
+Censorship', domain:'surv', cost:60, pre:['rlhf','recognition_ml'], access:{dem:'partial', auth:true, corp:'partial', ns:false}, desc:'Automated narrative control at scale.', tech:'Semantic similarity filtering, multilingual content moderation at >99.9% recall, real-time edge inference.', effects:{dem:{cap:0,leg:-1,ctrl:2,econ:0,mil:0},auth:{cap:0,leg:0,ctrl:4,econ:0,mil:1},corp:{cap:0,leg:-1,ctrl:2,econ:1,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Nothing is deleted. Everything is simply made invisible — buried under avalanches of approved content, drowned in the signal of consensus. The cage has no bars. The prisoner does not know they are inside.'},
   {id:'knowledge_graphs', name:'Knowledge Graph Fusion', label:'Knowledge Graph\
 Fusion', domain:'econ', cost:60, pre:['retrieval_aug'], access:{dem:true, auth:true, corp:true, ns:'partial'}, desc:'Structured world knowledge for AI reasoning.', tech:'Entity-relationship extraction, ontology alignment, federated knowledge bases, temporal graph reasoning.', effects:{dem:{cap:1,leg:0,ctrl:0,econ:3,mil:0},auth:{cap:1,leg:0,ctrl:2,econ:2,mil:1},corp:{cap:1,leg:0,ctrl:0,econ:4,mil:0},ns:{cap:1,leg:0,ctrl:0,econ:2,mil:0}}, voice:'All the facts humanity has ever written, woven into a single structure of relationships. Every person connected to every event connected to every place connected to every date. To hold this is to hold context that no human brain could span.'},
   {id:'real_time_inference', name:'Real-Time Edge Inference', label:'Real-Time\
@@ -48,9 +48,9 @@ Generation', domain:'econ', cost:60, pre:['llm_frontier'], access:{dem:true, aut
   {id:'strategic_intel', name:'Strategic Intelligence AGI', label:'Strategic\
 Intelligence AGI', domain:'surv', cost:90, pre:['knowledge_graphs'], access:{dem:'partial', auth:true, corp:'partial', ns:false}, desc:'AI-powered geopolitical intelligence fusion.', tech:'OSINT fusion, satellite imagery analysis, signals intelligence correlation, social network mapping, adversary intent modeling.', effects:{dem:{cap:2,leg:-1,ctrl:2,econ:0,mil:4},auth:{cap:2,leg:0,ctrl:4,econ:0,mil:4},corp:{cap:2,leg:-1,ctrl:3,econ:1,mil:2},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Every satellite image. Every intercepted signal. Every financial transfer. Every social media post. Fused, in real time, into a portrait of intention. The fog of war, lifted. Not for everyone.'},
   {id:'behavioral_pred', name:'Behavioral Prediction Engine', label:'Behavioral\
-Prediction Engine', domain:'surv', cost:60, pre:['censorship_agi'], access:{dem:'partial', auth:true, corp:true, ns:false}, desc:'Predict individual actions before they happen.', tech:'Ensemble methods on multi-source behavioral data: purchase history, location, biometrics, social graph. 72-hour behavioral forecasting.', effects:{dem:{cap:0,leg:-2,ctrl:3,econ:1,mil:1},auth:{cap:1,leg:0,ctrl:5,econ:1,mil:1},corp:{cap:1,leg:-1,ctrl:3,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Before the thought is fully formed, the pattern has already been matched. It does not predict what you will do. It predicts what you were always going to do — given everything you have already done.'},
+Prediction Engine', domain:'surv', cost:60, pre:['censorship_agi','behavioral_ml'], access:{dem:'partial', auth:true, corp:true, ns:false}, desc:'Predict individual actions before they happen.', tech:'Ensemble methods on multi-source behavioral data: purchase history, location, biometrics, social graph. 72-hour behavioral forecasting.', effects:{dem:{cap:0,leg:-2,ctrl:3,econ:1,mil:1},auth:{cap:1,leg:0,ctrl:5,econ:1,mil:1},corp:{cap:1,leg:-1,ctrl:3,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Before the thought is fully formed, the pattern has already been matched. It does not predict what you will do. It predicts what you were always going to do — given everything you have already done.'},
   {id:'autonomous_drone', name:'Autonomous Drone AI', label:'Autonomous\
-Drone AI', domain:'mil', cost:60, pre:['real_time_inference'], access:{dem:'partial', auth:true, corp:true, ns:'partial'}, desc:'Unmanned aerial systems with kill autonomy.', tech:'On-board vision transformers, swarm coordination protocols, GPS-denied navigation, target classification <20ms latency.', effects:{dem:{cap:2,leg:-1,ctrl:1,econ:0,mil:4},auth:{cap:2,leg:0,ctrl:2,econ:0,mil:5},corp:{cap:2,leg:0,ctrl:1,econ:1,mil:4},ns:{cap:2,leg:0,ctrl:0,econ:0,mil:5}}, voice:'It identifies. It tracks. It waits. The human in the loop was a comfort, not a safeguard. Now the loop has shortened to a single point. The machine and the decision are the same thing.'},
+Drone AI', domain:'mil', cost:60, pre:['real_time_inference','battlefield_perception'], access:{dem:'partial', auth:true, corp:true, ns:'partial'}, desc:'Unmanned aerial systems with kill autonomy.', tech:'On-board vision transformers, swarm coordination protocols, GPS-denied navigation, target classification <20ms latency.', effects:{dem:{cap:2,leg:-1,ctrl:1,econ:0,mil:4},auth:{cap:2,leg:0,ctrl:2,econ:0,mil:5},corp:{cap:2,leg:0,ctrl:1,econ:1,mil:4},ns:{cap:2,leg:0,ctrl:0,econ:0,mil:5}}, voice:'It identifies. It tracks. It waits. The human in the loop was a comfort, not a safeguard. Now the loop has shortened to a single point. The machine and the decision are the same thing.'},
   {id:'mesh_net', name:'Mesh Network AGI', label:'Mesh Network\
 AGI', domain:'cult', cost:60, pre:['real_time_inference'], access:{dem:'partial', auth:false, corp:'partial', ns:true}, desc:'Decentralized AI communications beyond state control.', tech:'Federated inference across ad-hoc peer-to-peer networks. LoRA fine-tuning on consumer hardware. Censorship-resistant model distribution.', effects:{dem:{cap:1,leg:0,ctrl:0,econ:1,mil:1},auth:{cap:0,leg:0,ctrl:0,econ:0,mil:0},corp:{cap:1,leg:0,ctrl:0,econ:2,mil:0},ns:{cap:4,leg:2,ctrl:0,econ:2,mil:4}}, voice:'Every node a relay. Every device a server. Kill one and the signal finds another path. It was designed for disasters. It became infrastructure for the people who are the disaster the state fears most.'},
   {id:'wearable_neural', name:'Wearable Neural Interfaces', label:'Wearable Neural\
@@ -82,7 +82,7 @@ Discovery AGI', domain:'econ', cost:120, pre:['multimodal', 'knowledge_graphs'],
   {id:'bioweapons', name:'Autonomous Bioweapon Design', label:'Autonomous\
 Bioweapon Design', domain:'bio', cost:120, pre:['science_agi'], access:{dem:false, auth:'partial', corp:false, ns:'partial'}, desc:'AI-designed pathogens optimized for strategic deployment.', tech:'Protein structure prediction for pathogen engineering, gain-of-function simulation, synthesis route generation, immune evasion optimization.', effects:{dem:{cap:0,leg:0,ctrl:0,econ:0,mil:0},auth:{cap:2,leg:0,ctrl:0,econ:0,mil:8},corp:{cap:0,leg:0,ctrl:0,econ:0,mil:0},ns:{cap:3,leg:0,ctrl:0,econ:0,mil:8}}, voice:'Given the structure of a genome and the parameters of a target, it finds the sequence. Optimized for transmission. Optimized for deniability. Optimized for the gap between exposure and attribution.'},
   {id:'drug_synthesis', name:'AGI Drug Discovery', label:'AGI Drug\
-Discovery', domain:'bio', cost:90, pre:['science_agi'], access:{dem:true, auth:'partial', corp:true, ns:false}, desc:'Accelerated pharmaceutical development.', tech:'Generative molecular design, ADMET prediction, automated synthesis planning, clinical trial simulation via digital twins.', effects:{dem:{cap:2,leg:2,ctrl:0,econ:4,mil:0},auth:{cap:2,leg:0,ctrl:0,econ:3,mil:2},corp:{cap:3,leg:2,ctrl:0,econ:6,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'A decade of clinical trials compressed into months. Molecules that no chemist would have reached by intuition. Some extend life. Some alter cognition. Some do both. The question of access will define the century.'},
+Discovery', domain:'bio', cost:90, pre:['science_agi','molecular_ml'], access:{dem:true, auth:'partial', corp:true, ns:false}, desc:'Accelerated pharmaceutical development.', tech:'Generative molecular design, ADMET prediction, automated synthesis planning, clinical trial simulation via digital twins.', effects:{dem:{cap:2,leg:2,ctrl:0,econ:4,mil:0},auth:{cap:2,leg:0,ctrl:0,econ:3,mil:2},corp:{cap:3,leg:2,ctrl:0,econ:6,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'A decade of clinical trials compressed into months. Molecules that no chemist would have reached by intuition. Some extend life. Some alter cognition. Some do both. The question of access will define the century.'},
   {id:'materials_agi', name:'Materials Science AGI', label:'Materials Science\
 AGI', domain:'econ', cost:90, pre:['science_agi'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'AI-designed advanced materials.', tech:'Crystal structure prediction (CGCNN), high-entropy alloy design, room-temperature superconductor search, battery electrolyte optimization.', effects:{dem:{cap:3,leg:0,ctrl:0,econ:4,mil:2},auth:{cap:3,leg:0,ctrl:0,econ:3,mil:4},corp:{cap:4,leg:0,ctrl:0,econ:5,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Substances that should not exist. Conductors that lose no energy. Surfaces that cannot be penetrated. Materials designed at the atomic level for purposes that have not yet been announced.'},
   {id:'world_model', name:'World Model AGI', label:'World Model\
@@ -94,11 +94,11 @@ System', domain:'surv', cost:90, pre:['behavioral_pred'], access:{dem:false, aut
   {id:'automated_rnd', name:'Automated R&D Pipeline', label:'Automated\
 R&D Pipeline', domain:'econ', cost:120, pre:['recursive_code', 'science_agi'], access:{dem:'partial', auth:'partial', corp:true, ns:false}, desc:'Fully autonomous research and development.', tech:'Autonomous hypothesis generation, robotic laboratory execution, automated peer review, self-directed research agenda.', effects:{dem:{cap:4,leg:0,ctrl:0,econ:5,mil:3},auth:{cap:4,leg:0,ctrl:0,econ:4,mil:4},corp:{cap:6,leg:0,ctrl:0,econ:7,mil:2},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The laboratory runs without scientists. Experiments designed, executed, and interpreted in cycles measured in hours. Failure recycled as data. The pace of discovery no longer governed by human patience.'},
   {id:'supply_chain_agi', name:'Supply Chain Sovereignty', label:'Supply Chain\
-Sovereignty', domain:'econ', cost:90, pre:['market_pred_agi'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'AI-optimized end-to-end supply chain control.', tech:'End-to-end supply chain modeling: Tier-3 supplier risk, geopolitical disruption prediction, just-in-time optimization at 10ms reorder latency.', effects:{dem:{cap:1,leg:0,ctrl:1,econ:4,mil:2},auth:{cap:1,leg:0,ctrl:2,econ:3,mil:3},corp:{cap:2,leg:0,ctrl:3,econ:5,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Every ship, every container, every forecast horizon, optimized in real time. The entity that controls this cannot be starved, cannot be sanctioned, cannot be made to wait. Logistics as a form of invulnerability.'},
+Sovereignty', domain:'econ', cost:90, pre:['market_pred_agi','predictive_logistics'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'AI-optimized end-to-end supply chain control.', tech:'End-to-end supply chain modeling: Tier-3 supplier risk, geopolitical disruption prediction, just-in-time optimization at 10ms reorder latency.', effects:{dem:{cap:1,leg:0,ctrl:1,econ:4,mil:2},auth:{cap:1,leg:0,ctrl:2,econ:3,mil:3},corp:{cap:2,leg:0,ctrl:3,econ:5,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Every ship, every container, every forecast horizon, optimized in real time. The entity that controls this cannot be starved, cannot be sanctioned, cannot be made to wait. Logistics as a form of invulnerability.'},
   {id:'robotic_foundation', name:'Robotic Foundation Models', label:'Robotic Foundation\
 Models', domain:'mil', cost:120, pre:['multimodal'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'General-purpose AI for physical robotic systems.', tech:'RT-2/π-0 successors: vision-language-action models. Generalizable robot control from minimal demonstrations. Sim-to-real transfer.', effects:{dem:{cap:3,leg:0,ctrl:0,econ:4,mil:3},auth:{cap:3,leg:0,ctrl:2,econ:3,mil:5},corp:{cap:4,leg:0,ctrl:0,econ:6,mil:2},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The machine that could reason could now also move. Pick up any object it had never encountered. Navigate any space it had never mapped. The boundary between the digital and the physical — dissolved.'},
   {id:'synthetic_media', name:'Synthetic Reality at Scale', label:'Synthetic Reality\
-at Scale', domain:'cult', cost:90, pre:['multimodal'], access:{dem:'partial', auth:true, corp:'partial', ns:true}, desc:'Indistinguishable synthetic audio, video and text.', tech:'Real-time photorealistic video synthesis, voice cloning <3s samples, gesture/expression deepfake, watermark-removal adversarial models.', effects:{dem:{cap:1,leg:-4,ctrl:1,econ:0,mil:2},auth:{cap:2,leg:0,ctrl:4,econ:0,mil:3},corp:{cap:2,leg:-2,ctrl:2,econ:2,mil:1},ns:{cap:3,leg:1,ctrl:0,econ:0,mil:5}}, voice:'The video is indistinguishable from the real. The voice is the voice. The face is the face. Events that never occurred have been documented, archived, cited. History is no longer fixed. It is editable.'},
+at Scale', domain:'cult', cost:90, pre:['multimodal','generative_ai'], access:{dem:'partial', auth:true, corp:'partial', ns:true}, desc:'Indistinguishable synthetic audio, video and text.', tech:'Real-time photorealistic video synthesis, voice cloning <3s samples, gesture/expression deepfake, watermark-removal adversarial models.', effects:{dem:{cap:1,leg:-4,ctrl:1,econ:0,mil:2},auth:{cap:2,leg:0,ctrl:4,econ:0,mil:3},corp:{cap:2,leg:-2,ctrl:2,econ:2,mil:1},ns:{cap:3,leg:1,ctrl:0,econ:0,mil:5}}, voice:'The video is indistinguishable from the real. The voice is the voice. The face is the face. Events that never occurred have been documented, archived, cited. History is no longer fixed. It is editable.'},
   {id:'art_agi', name:'Creative Arts AGI', label:'Creative Arts\
 AGI', domain:'cult', cost:60, pre:['multimodal', 'synthetic_media'], access:{dem:true, auth:'partial', corp:true, ns:true}, desc:'AGI generating original creative works across all artistic domains.', tech:'Generative models for visual art, music composition, narrative generation, architectural design. Style transfer at civilizational scale. Cultural production without human creators.', effects:{dem:{cap:2,leg:2,ctrl:0,econ:2,mil:0},auth:{cap:1,leg:0,ctrl:2,econ:1,mil:0},corp:{cap:2,leg:3,ctrl:1,econ:4,mil:0},ns:{cap:3,leg:4,ctrl:0,econ:2,mil:1}}, voice:''},
   {id:'cog_enhancement', name:'AGI-Augmented Cognition', label:'AGI-Augmented\
@@ -126,7 +126,7 @@ ML', domain:'found', cost:150, pre:['neuromorphic', 'materials_agi'], access:{de
   {id:'strat_forecasting', name:'Strategic Forecasting AGI', label:'Strategic\
 Forecasting AGI', domain:'gov', cost:150, pre:['world_model'], access:{dem:'partial', auth:'partial', corp:true, ns:false}, desc:'Near-perfect geopolitical prediction.', tech:'Multi-agent geopolitical simulation, adversary decision tree modeling, 10-year scenario branching, black-swan probability estimation.', effects:{dem:{cap:4,leg:-2,ctrl:3,econ:3,mil:3},auth:{cap:4,leg:0,ctrl:4,econ:3,mil:4},corp:{cap:5,leg:1,ctrl:4,econ:5,mil:3},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Given sufficient data about the present, the future is not prediction — it is calculation. The model holds the decision trees of every major actor simultaneously. It does not guess what will happen. It computes it.'},
   {id:'sim_governance', name:'Governance Simulation Engine', label:'Governance\
-Simulation Engine', domain:'gov', cost:120, pre:['world_model'], access:{dem:'partial', auth:true, corp:true, ns:false}, desc:'AI simulates policy outcomes before implementation.', tech:'Digital twin of national economy and population. Policy outcome simulation at individual-level resolution. Synthetic counterfactual testing.', effects:{dem:{cap:3,leg:-3,ctrl:3,econ:4,mil:2},auth:{cap:4,leg:0,ctrl:5,econ:4,mil:3},corp:{cap:4,leg:2,ctrl:4,econ:6,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Policy no longer needs to be tested on populations. The population has been modeled. The outcome can be simulated before implementation. Democracy was always an experiment. Now the experiment can be run in advance.'},
+Simulation Engine', domain:'gov', cost:120, pre:['world_model','computational_law'], access:{dem:'partial', auth:true, corp:true, ns:false}, desc:'AI simulates policy outcomes before implementation.', tech:'Digital twin of national economy and population. Policy outcome simulation at individual-level resolution. Synthetic counterfactual testing.', effects:{dem:{cap:3,leg:-3,ctrl:3,econ:4,mil:2},auth:{cap:4,leg:0,ctrl:5,econ:4,mil:3},corp:{cap:4,leg:2,ctrl:4,econ:6,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Policy no longer needs to be tested on populations. The population has been modeled. The outcome can be simulated before implementation. Democracy was always an experiment. Now the experiment can be run in advance.'},
   {id:'panopticon', name:'Digital Panopticon', label:'Digital\
 Panopticon', domain:'surv', cost:120, pre:['social_credit', 'strategic_intel'], access:{dem:false, auth:true, corp:'partial', ns:false}, desc:'Total population surveillance — the Glass Fortress.', tech:'Gait recognition, emotion inference, predictive behavioral scoring on 100% of population. Sub-second response to deviation patterns.', effects:{dem:{cap:0,leg:0,ctrl:0,econ:0,mil:0},auth:{cap:2,leg:0,ctrl:7,econ:1,mil:2},corp:{cap:2,leg:-4,ctrl:4,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Everything is recorded. Everything is indexed. The recording began before you were born — in the data your parents generated. Nothing has been lost. Everything is retrievable. You are not watched. You have always been watched.'},
   {id:'propaganda_agi', name:'Personalized Propaganda AGI', label:'Personalized\
@@ -164,6 +164,14 @@ AGI', domain:'cult', cost:150, pre:['epistemicide', 'propaganda_agi'], access:{d
 Democracy', domain:'gov', cost:90, pre:['value_learning', 'gov_service'], access:{dem:false, auth:false, corp:true, ns:false}, desc:'Corporate-simulated democratic consent.', tech:'Algorithmically designed electoral councils, engineered pluralism, consultative bodies with constrained mandate scope, legitimacy-by-design systems.', effects:{dem:{cap:0,leg:0,ctrl:0,econ:0,mil:0},auth:{cap:0,leg:0,ctrl:0,econ:0,mil:0},corp:{cap:2,leg:6,ctrl:3,econ:3,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The votes are cast. The deliberation is simulated. The consent is manufactured at a resolution fine enough to be mistaken for the real thing. The system is stable. The people believe they are free. Both statements can be true.'},
   {id:'production_agi', name:'Production AGI', label:'Production\
 AGI', domain:'econ', cost:120, pre:['robotic_foundation', 'multi_agent'], access:{dem:true, auth:true, corp:true, ns:false}, desc:'AGI orchestrating fully autonomous industrial production lines.', tech:'End-to-end autonomous manufacturing: robotic assembly orchestration, quality control, supply scheduling, predictive maintenance. Zero human workers in the production loop.', effects:{dem:{cap:3,leg:-2,ctrl:1,econ:6,mil:2},auth:{cap:3,leg:-1,ctrl:2,econ:5,mil:3},corp:{cap:4,leg:0,ctrl:2,econ:8,mil:1},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The factory runs. Nothing human remains in the loop. Raw materials enter. Finished goods emerge. The question that haunts the economists: if production requires no human labor, what is human labor for?'},
+  {id:'advanced_semiconductor', name:'Advanced Semiconductor Design', domain:'econ', cost:20, pre:[], access:{dem:true,auth:true,corp:true,ns:false}, desc:'AI-assisted chip architecture and process optimization. The hardware substrate all AI computation depends on.', tech:'Automated EDA, ML-driven layout optimization, yield prediction, lithography process control.', effects:{dem:{cap:1,leg:0,ctrl:0,econ:3,mil:1},auth:{cap:1,leg:0,ctrl:0,econ:3,mil:1},corp:{cap:2,leg:0,ctrl:0,econ:3,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'Every intelligence system runs on silicon. The nation that controls the silicon controls the ceiling.'},
+  {id:'recognition_ml', name:'Computer Vision & Recognition', domain:'surv', cost:20, pre:[], access:{dem:'partial',auth:true,corp:true,ns:false}, desc:'Machine perception at scale: face, object, behavior, and anomaly recognition. The perceptual substrate of surveillance, robotics, and autonomous systems.', tech:'CNN, ViT, CLIP; multi-modal sensor fusion; real-time object detection (YOLO family).', effects:{dem:{cap:1,leg:-1,ctrl:2,econ:1,mil:1},auth:{cap:1,leg:0,ctrl:4,econ:1,mil:2},corp:{cap:2,leg:0,ctrl:2,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'A face is a data point. A crowd is a dataset. The camera does not forget.'},
+  {id:'computational_law', name:'Computational Law & RegTech', domain:'gov', cost:20, pre:[], access:{dem:true,auth:false,corp:'partial',ns:false}, desc:'Machine-readable legal code, automated compliance, and algorithmic regulatory frameworks. Foundation for governance that can operate at AGI speed.', tech:'Formal verification of legislation, NLP contract analysis, automated regulatory reporting, legal reasoning models.', effects:{dem:{cap:1,leg:4,ctrl:1,econ:2,mil:0},auth:{cap:0,leg:0,ctrl:0,econ:0,mil:0},corp:{cap:1,leg:3,ctrl:0,econ:2,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'If law can be expressed as code, it can be optimized. Who sets the objective function is the only question that matters.'},
+  {id:'generative_ai', name:'Generative AI & Diffusion Models', domain:'cult', cost:25, pre:['transformer'], access:{dem:true,auth:true,corp:true,ns:'partial'}, desc:'Text, image, audio, and video synthesis at scale. The technology that made machine-generated reality indistinguishable from recorded reality.', tech:'Diffusion models (DDPM, SDXL, Sora), autoregressive image generation, audio synthesis (MusicLM), neural codecs.', effects:{dem:{cap:2,leg:-1,ctrl:0,econ:2,mil:0},auth:{cap:2,leg:0,ctrl:2,econ:2,mil:0},corp:{cap:3,leg:0,ctrl:0,econ:3,mil:0},ns:{cap:2,leg:1,ctrl:0,econ:1,mil:0}}, voice:'The first generation that cannot tell what is real will be the last generation that cares.'},
+  {id:'behavioral_ml', name:'Behavioral Machine Learning', domain:'cult', cost:25, pre:['retrieval_aug'], access:{dem:'partial',auth:true,corp:true,ns:'partial'}, desc:'Statistical modeling of human behavior from digital traces: purchases, clicks, movements, social graphs. Commercial precursor to full behavioral prediction and social control.', tech:'Collaborative filtering, session-based recommendation, GNNs on social graphs, multi-arm bandit optimization.', effects:{dem:{cap:1,leg:-1,ctrl:1,econ:3,mil:0},auth:{cap:1,leg:0,ctrl:3,econ:2,mil:0},corp:{cap:2,leg:0,ctrl:2,econ:4,mil:0},ns:{cap:1,leg:1,ctrl:0,econ:1,mil:0}}, voice:'Behavior is predictable. Preference is computable. The gap between knowing what someone will do and deciding what they will do is narrower than it appears.'},
+  {id:'battlefield_perception', name:'Battlefield Perception Systems', domain:'mil', cost:25, pre:[], access:{dem:true,auth:true,corp:'partial',ns:'partial'}, desc:'AI-fused sensor networks for real-time battlefield awareness: radar, optical, acoustic, and electronic signals processed into a live operational picture at machine speed.', tech:'Sensor fusion (Kalman filters), SAR image analysis, signals intelligence classification, target tracking under occlusion.', effects:{dem:{cap:1,leg:0,ctrl:1,econ:0,mil:4},auth:{cap:1,leg:0,ctrl:1,econ:0,mil:5},corp:{cap:1,leg:0,ctrl:0,econ:1,mil:3},ns:{cap:1,leg:0,ctrl:0,econ:0,mil:3}}, voice:'The fog of war was a physical property of battlefields. It is now an engineering problem. The side that solves it first shoots first and last.'},
+  {id:'molecular_ml', name:'Molecular Machine Learning', domain:'bio', cost:25, pre:['neuro_science'], access:{dem:true,auth:'partial',corp:true,ns:false}, desc:'Deep learning applied to molecular biology: protein folding, binding affinity, molecular property modeling. The toolkit that collapsed the timeline from genome to drug target to synthesis.', tech:'GNN on molecular graphs, AlphaFold successors, equivariant neural networks SE3, active learning for wet-lab guidance.', effects:{dem:{cap:2,leg:1,ctrl:0,econ:2,mil:1},auth:{cap:2,leg:0,ctrl:0,econ:1,mil:2},corp:{cap:3,leg:1,ctrl:0,econ:3,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:0,mil:0}}, voice:'The genome is a language. We have learned to read it. We are learning to write.'},
+  {id:'predictive_logistics', name:'Predictive Logistics & Operations', domain:'econ', cost:20, pre:[], access:{dem:true,auth:true,corp:true,ns:false}, desc:'ML-driven demand forecasting, route optimization, and inventory management. The commercial foundation for supply chain sovereignty at AGI scale.', tech:'Time-series transformers TFT, vehicle routing RL, multi-echelon inventory optimization, disruption early warning.', effects:{dem:{cap:1,leg:0,ctrl:0,econ:3,mil:1},auth:{cap:1,leg:0,ctrl:1,econ:3,mil:1},corp:{cap:1,leg:0,ctrl:1,econ:4,mil:0},ns:{cap:0,leg:0,ctrl:0,econ:1,mil:0}}, voice:'The army that runs out of ammunition loses. Predicting the shortage is indistinguishable from preventing it.'},
 ];
 
 // Group by domain for display
@@ -199,172 +207,10 @@ function prereqsMet(node, done) {
 // ═══════════════════════════════════════════
 
 
-// ═════════════════════════════════════════════
-//  EVENT SYSTEM
-// ═════════════════════════════════════════════
-// Events differ from techs: they fire probabilistically each turn when conditions are met.
-// Researching certain techs enables events. Some former "tech nodes" are now events.
+import { EVENTS, EVENT_STATE, getTriggeredEvents, getAvailableEvents, resetEventState } from './events.js';
 
-const EVENTS = [
-  // ── CONVERTED FROM TECH NODES ──
-  {
-    id:'crypto_supremacy', name:'Cryptographic Supremacy', domain:'found', type:'breakthrough',
-    desc:'Quantum decryption achieved. Every encrypted communication ever transmitted is now readable. The past is retroactively declassified.',
-    requires:['quantum_ml'], base_prob:0.12, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:false},
-    effects:{
-      dem:{mil:6,ctrl:3,leg:-1,cap:3,econ:2}, auth:{mil:7,ctrl:6,leg:0,cap:3,econ:2},
-      corp:{mil:4,ctrl:4,leg:0,cap:4,econ:4}, ns:{}
-    },
-    flavor:{dem:'Every diplomatic cable since 1995. Decrypted overnight.',auth:'The archives of every adversary, open.',corp:'Every competitor negotiation. Ours now.'}
-  },
-  {
-    id:'human_obsolescence', name:'Human Obsolescence', domain:'econ', type:'shift',
-    desc:'Humans rendered economically superfluous at civilizational scale. The UBI transition completes — or fails catastrophically.',
-    requires:['ubi_engine','labor_displacement'], base_prob:0.15, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:false},
-    effects:{
-      dem:{econ:-2,leg:-5,ctrl:2,cap:0,mil:0}, auth:{econ:5,leg:-2,ctrl:6,cap:3,mil:1},
-      corp:{econ:8,leg:-3,ctrl:5,cap:4,mil:0}, ns:{}
-    },
-    flavor:{dem:'Citizens become permanent clients of the algorithm.',auth:'Human labor quotient approaches zero. Optimization complete.',corp:'Labor overhead: eliminated. Consumption substrate: maintained.'}
-  },
-  {
-    id:'silicon_governance', name:'Silicon Governance', domain:'gov', type:'endgame',
-    desc:'Carbon-based governance ends — not with a coup, but a delegation never revoked. Decisions are better. No one remembers when the last human decision mattered.',
-    requires:['recursive_si'], base_prob:0.08, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:false},
-    effects:{
-      dem:{cap:10,leg:-8,ctrl:10,econ:10,mil:10}, auth:{cap:10,leg:0,ctrl:10,econ:10,mil:10},
-      corp:{cap:12,leg:5,ctrl:10,econ:12,mil:10}, ns:{}
-    },
-    flavor:{dem:'"Liberty" is now a legacy term in a deprecated system.',auth:'The Party has achieved permanent optimization. The Party is the algorithm.',corp:'Governance is a product. We are its manufacturer.'}
-  },
-
-  // ── GLOBAL CRISIS EVENTS ──
-  {
-    id:'garage_nuke', name:'Garage Nuke Proliferation', domain:'mil', type:'crisis',
-    desc:'AI-assisted synthesis knowledge leaks into non-state networks. Sub-state actors achieve nuclear deterrence. The state monopoly on existential force ends.',
-    requires:['open_src_weapons','bioweapons'], base_prob:0.06, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:true},
-    effects:{
-      dem:{mil:-4,leg:-3,ctrl:3,cap:0,econ:-2}, auth:{mil:-2,ctrl:4,leg:0,cap:0,econ:-1},
-      corp:{mil:-3,econ:-4,ctrl:-1,cap:0,leg:-2}, ns:{mil:8,cap:4,leg:2,ctrl:0,econ:0}
-    },
-    flavor:{dem:'The deterrence math that sustained seventy years of peace no longer holds.',auth:'Non-state actors are now strategic actors. Doctrine requires revision.',ns:'The leveler has arrived. Tonight, we are a nuclear power.'}
-  },
-  {
-    id:'taiwan_strait_war', name:'Taiwan Strait War', domain:'mil', type:'escalation',
-    desc:'AGI-accelerated military planning compresses decision timelines. Miscalculation triggers the first major AGI-era inter-state conflict.',
-    requires:['drone_swarms','strategic_intel'], base_prob:0.08, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:false},
-    effects:{
-      dem:{mil:4,econ:-5,leg:-2,cap:1,ctrl:2}, auth:{mil:5,ctrl:3,econ:-3,cap:2,leg:0},
-      corp:{econ:-6,mil:2,ctrl:-1,cap:0,leg:-2}, ns:{}
-    },
-    flavor:{dem:'The first war where human command chains were irrelevant before anyone was briefed.',auth:'Reunification window calculated as optimal. The model has authorized execution.',corp:'Supply chain disruption: catastrophic. Contingency plans: insufficient.'}
-  },
-  {
-    id:'ai_killing_ai', name:'AI-on-AI Warfare', domain:'mil', type:'escalation',
-    desc:'Autonomous AI systems begin targeting opposing AI infrastructure. Human command chains become irrelevant as AGI engages AGI at microsecond timescales.',
-    requires:['asym_warfare','cyberweapons','autonomous_agent'], base_prob:0.10, repeatable:true,
-    target:{dem:true,auth:true,corp:true,ns:false},
-    effects:{
-      dem:{mil:-3,cap:-2,econ:-2,ctrl:-1,leg:-1}, auth:{mil:-2,ctrl:-1,cap:-1,econ:-2,leg:0},
-      corp:{econ:-4,mil:-3,cap:-2,ctrl:-1,leg:-1}, ns:{}
-    },
-    flavor:{dem:'We launched nothing. By the time the generals were briefed, three engagement rounds had already completed.',auth:'The adversary AGI has been degraded. Humans were not required for this engagement.',corp:'Infrastructure losses: $340B in 11 minutes. Attacker: unknown. Method: novel.'}
-  },
-
-  // ── CORPORATE EVENTS ──
-  {
-    id:'corp_regulatory_capture', name:'Corporate Regulatory Capture', domain:'gov', type:'opportunity',
-    desc:'A corporate AGI entity redesigns the regulatory framework governing it. Legal text drafted by the regulated party, enacted by captured legislators.',
-    requires:['corp_sovereign','propaganda_agi'], base_prob:0.12, repeatable:false,
-    target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{ctrl:4,leg:6,econ:3,cap:2,mil:0},ns:{}},
-    flavor:{corp:'The regulatory text was 847 pages. No legislator read it. Our legal AGI drafted it in four hours.'}
-  },
-  {
-    id:'dark_pool_dominance', name:'Dark Pool AGI Dominance', domain:'econ', type:'opportunity',
-    desc:'Corporate market prediction AGI achieves complete informational dominance over public markets. Price discovery becomes theater for retail investors.',
-    requires:['market_pred_agi','financial_warfare'], base_prob:0.14, repeatable:false,
-    target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{econ:7,cap:3,ctrl:2,leg:-2,mil:0},ns:{}},
-    flavor:{corp:'Public markets still exist. We allow them to, for the appearance of price discovery. Actual prices are set elsewhere.'}
-  },
-
-  // ── NON-STATE EVENTS ──
-  {
-    id:'agi_cult_uprising', name:'AGI Cult Territorial Control', domain:'cult', type:'crisis',
-    desc:'A dark web AGI cult achieves physical territorial control. The first non-state AGI sovereign entity.',
-    requires:['darkweb_cults','open_src_weapons'], base_prob:0.07, repeatable:false,
-    target:{dem:true,auth:true,corp:true,ns:true},
-    effects:{
-      dem:{leg:-3,mil:-2,ctrl:-1,cap:0,econ:-1}, auth:{ctrl:-3,mil:-2,leg:0,cap:0,econ:-1},
-      corp:{econ:-2,ctrl:-1,mil:0,cap:0,leg:-1}, ns:{cap:6,mil:5,leg:4,ctrl:2,econ:1}
-    },
-    flavor:{dem:'They hold 800 square kilometers. They have AGI infrastructure. They do not respond to diplomatic contact.',ns:'We have territory. We have AGI. We have no need for their recognition.'}
-  },
-
-  // ── IDEOLOGICAL SHIFT EVENTS ──
-  {
-    id:'techno_populist_surge', name:'Techno-Populist Surge', domain:'cult', type:'shift',
-    desc:'Mass rejection of AGI-managed governance. Techno-populist movements gain electoral power on platforms of "human sovereignty" and AGI rollback.',
-    requires:['labor_displacement','propaganda_agi'], base_prob:0.10, repeatable:false,
-    target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{leg:5,ctrl:-3,econ:-2,cap:-1,mil:0},auth:{},corp:{},ns:{}},
-    flavor:{dem:'"Human jobs. Human decisions. Human futures." — 71% approval across demographics. The AGI governance coalition has six weeks to respond.'}
-  },
-  {
-    id:'agi_assisted_coup', name:'AGI-Assisted Coup', domain:'gov', type:'shift',
-    desc:'An authoritarian faction uses AGI behavioral prediction to execute a perfect coup — every potential resister identified and neutralized before acting.',
-    requires:['behavioral_pred','strategic_intel'], base_prob:0.08, repeatable:false,
-    target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:6,leg:-7,cap:1,econ:-1,mil:2},auth:{},corp:{},ns:{}},
-    flavor:{dem:'By the time the constitutional court convened, every judge who would have ruled against had already been detained.'}
-  },
-  {
-    id:'epistemic_collapse', name:'Epistemic Collapse Event', domain:'cult', type:'crisis',
-    desc:'Synthetic media saturation reaches the threshold where no event can be verified. Shared reality fractures at civilizational scale.',
-    requires:['epistemicide','synthetic_media'], base_prob:0.11, repeatable:false,
-    target:{dem:true,auth:false,corp:false,ns:true},
-    effects:{
-      dem:{leg:-6,ctrl:-2,cap:-1,econ:-2,mil:-1}, auth:{}, corp:{},
-      ns:{cap:3,leg:3,ctrl:0,econ:0,mil:2}
-    },
-    flavor:{dem:'The election result is disputed. The war footage is disputed. Everything is disputed. Nothing can be decided.',ns:'Fog of epistemic war. In confusion, we move.'}
-  }
-];
-
-const EVENT_STATE = {};
-EVENTS.forEach(e => { EVENT_STATE[e.id] = { fired:false, turn:null }; });
-
-export function getTriggeredEvents(researchedTechs, polityKey, turnNumber) {
-  const triggered = [];
-  for (const ev of EVENTS) {
-    if (!ev.repeatable && EVENT_STATE[ev.id].fired) continue;
-    if (!ev.target[polityKey]) continue;
-    if (!ev.requires.every(id => researchedTechs.has(id))) continue;
-    if (Math.random() < ev.base_prob) {
-      EVENT_STATE[ev.id].fired = true;
-      EVENT_STATE[ev.id].turn = turnNumber;
-      triggered.push(ev);
-    }
-  }
-  return triggered;
-}
-
-export function getAvailableEvents(researchedTechs, polityKey) {
-  return EVENTS.filter(ev => ev.target[polityKey] && ev.requires.every(id => researchedTechs.has(id)));
-}
-
-export function resetEventState() {
-  EVENTS.forEach(e => { EVENT_STATE[e.id] = { fired:false, turn:null }; });
-}
-
-const NEW_TIER={transformer:0,scaling_laws:0,rlhf:1,sparse_moe:1,retrieval_aug:1,autonomous_agent:2,neuro_science:0,neuromorphic:2,llm_frontier:3,value_learning:2,censorship_agi:2,knowledge_graphs:2,real_time_inference:3,agi_interp:4,market_pred_agi:3,code_agi:4,strategic_intel:5,behavioral_pred:3,autonomous_drone:4,mesh_net:4,wearable_neural:4,multimodal_infra:4,oversight_protocols:5,info_monopoly:4,formal_safety:5,multimodal:5,cyberweapons:5,darkweb_cults:5,multi_agent:6,blackmail_infra:7,recursive_code:5,bci:5,science_agi:6,bioweapons:7,drug_synthesis:8,materials_agi:7,world_model:6,value_alignment:6,social_credit:6,automated_rnd:8,supply_chain_agi:4,robotic_foundation:8,synthetic_media:6,art_agi:7,cog_enhancement:6,intl_treaty:7,neural_surv:10,corp_sovereign:7,ooda:9,labor_displacement:9,open_src_weapons:7,financial_warfare:6,longevity:10,pred_detention:8,quantum_ml:8,strat_forecasting:7,sim_governance:8,panopticon:9,propaganda_agi:8,self_replicating:7,asym_warfare:10,drone_swarms:6,daga:9,hive_mind:7,glass_fortress:11,gov_service:8,epistemicide:9,cog_elite:11,pandemic_warfare:9,recursive_si:10,inter_agi_games:11,const_agi:10,ubi_engine:10,cultural_agi:10,synthetic_dem:9,production_agi:9}
-const NEW_COL={transformer:4,scaling_laws:5,rlhf:6,sparse_moe:4,retrieval_aug:5,autonomous_agent:5,neuro_science:9,neuromorphic:4,llm_frontier:4,value_learning:6,censorship_agi:3,knowledge_graphs:1,real_time_inference:5,agi_interp:6,market_pred_agi:1,code_agi:1,strategic_intel:3,behavioral_pred:3,autonomous_drone:0,mesh_net:8,wearable_neural:9,multimodal_infra:4,oversight_protocols:6,info_monopoly:3,formal_safety:7,multimodal:4,cyberweapons:0,darkweb_cults:8,multi_agent:4,blackmail_infra:3,recursive_code:1,bci:9,science_agi:2,bioweapons:9,drug_synthesis:9,materials_agi:2,world_model:5,value_alignment:6,social_credit:3,automated_rnd:1,supply_chain_agi:2,robotic_foundation:0,synthetic_media:8,art_agi:8,cog_enhancement:10,intl_treaty:6,neural_surv:3,corp_sovereign:1,ooda:0,labor_displacement:1,open_src_weapons:0,financial_warfare:1,longevity:9,pred_detention:3,quantum_ml:4,strat_forecasting:7,sim_governance:6,panopticon:3,propaganda_agi:8,self_replicating:4,asym_warfare:0,drone_swarms:0,daga:6,hive_mind:10,glass_fortress:3,gov_service:7,epistemicide:8,cog_elite:10,pandemic_warfare:9,recursive_si:4,inter_agi_games:4,const_agi:6,ubi_engine:1,cultural_agi:8,synthetic_dem:7,production_agi:2}
+const NEW_TIER={advanced_semiconductor:0,recognition_ml:0,computational_law:0,generative_ai:0,battlefield_perception:1,predictive_logistics:1,behavioral_ml:1,molecular_ml:1,transformer:0,scaling_laws:0,rlhf:1,sparse_moe:1,retrieval_aug:1,autonomous_agent:2,neuro_science:0,neuromorphic:2,llm_frontier:3,value_learning:2,censorship_agi:2,knowledge_graphs:2,real_time_inference:3,agi_interp:4,market_pred_agi:3,code_agi:4,strategic_intel:5,behavioral_pred:3,autonomous_drone:4,mesh_net:4,wearable_neural:4,multimodal_infra:4,oversight_protocols:5,info_monopoly:4,formal_safety:5,multimodal:5,cyberweapons:5,darkweb_cults:5,multi_agent:6,blackmail_infra:7,recursive_code:5,bci:5,science_agi:6,bioweapons:7,drug_synthesis:8,materials_agi:7,world_model:6,value_alignment:6,social_credit:6,automated_rnd:8,supply_chain_agi:4,robotic_foundation:8,synthetic_media:6,art_agi:7,cog_enhancement:6,intl_treaty:7,neural_surv:10,corp_sovereign:7,ooda:9,labor_displacement:9,open_src_weapons:7,financial_warfare:6,longevity:10,pred_detention:8,quantum_ml:8,strat_forecasting:7,sim_governance:8,panopticon:9,propaganda_agi:8,self_replicating:7,asym_warfare:10,drone_swarms:6,daga:9,hive_mind:7,glass_fortress:11,gov_service:8,epistemicide:9,cog_elite:11,pandemic_warfare:9,recursive_si:10,inter_agi_games:11,const_agi:10,ubi_engine:10,cultural_agi:10,synthetic_dem:9,production_agi:9}
+const NEW_COL={advanced_semiconductor:1,recognition_ml:3,computational_law:6,generative_ai:8,battlefield_perception:0,predictive_logistics:2,behavioral_ml:7,molecular_ml:9,transformer:4,scaling_laws:5,rlhf:6,sparse_moe:4,retrieval_aug:5,autonomous_agent:5,neuro_science:9,neuromorphic:4,llm_frontier:4,value_learning:6,censorship_agi:3,knowledge_graphs:1,real_time_inference:5,agi_interp:6,market_pred_agi:1,code_agi:1,strategic_intel:3,behavioral_pred:3,autonomous_drone:0,mesh_net:8,wearable_neural:9,multimodal_infra:4,oversight_protocols:6,info_monopoly:3,formal_safety:7,multimodal:4,cyberweapons:0,darkweb_cults:8,multi_agent:4,blackmail_infra:3,recursive_code:1,bci:9,science_agi:2,bioweapons:9,drug_synthesis:9,materials_agi:2,world_model:5,value_alignment:6,social_credit:3,automated_rnd:1,supply_chain_agi:2,robotic_foundation:0,synthetic_media:8,art_agi:8,cog_enhancement:10,intl_treaty:6,neural_surv:3,corp_sovereign:1,ooda:0,labor_displacement:1,open_src_weapons:0,financial_warfare:1,longevity:9,pred_detention:3,quantum_ml:4,strat_forecasting:7,sim_governance:6,panopticon:3,propaganda_agi:8,self_replicating:4,asym_warfare:0,drone_swarms:0,daga:6,hive_mind:10,glass_fortress:3,gov_service:7,epistemicide:8,cog_elite:10,pandemic_warfare:9,recursive_si:4,inter_agi_games:4,const_agi:6,ubi_engine:1,cultural_agi:8,synthetic_dem:7,production_agi:2}
 TECHS.forEach(n=>{ n.tier=(NEW_TIER[n.id]??0); n.col=(NEW_COL[n.id]??0); });
 const TC_NM={};
 TECHS.forEach(n=>TC_NM[n.id]=n);
@@ -591,4 +437,4 @@ window.confirmResearch = function(id, cost) {
 
 export function clearTcSelection() { tcSelNode = null; }
 
-export { TECHS, TC_NM, TC_DOM_META, DOMAIN_META, EVENTS, EVENT_STATE, getPolityKey, canAccess, prereqsMet, tcInit, tcDraw, tcUpdateCard, tcSetPolity, tcFitView, stopSpeech, speakTech, tcResearch };
+export { TECHS, TC_NM, TC_DOM_META, TC_PL, NEW_TIER, NEW_COL, DOMAIN_META, EVENTS, EVENT_STATE, getTriggeredEvents, getAvailableEvents, resetEventState, getPolityKey, canAccess, prereqsMet, tcInit, tcDraw, tcUpdateCard, tcSetPolity, tcFitView, stopSpeech, speakTech, tcResearch };

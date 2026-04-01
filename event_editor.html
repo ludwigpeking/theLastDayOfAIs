@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Editor</title>
+<link rel="stylesheet" href="style.css">
+<style>
+html { font-size: 16px; }
+body { display:flex; flex-direction:column; height:100vh; overflow:hidden; background:#0a0c10; color:#e0e0e0; font-family:'Segoe UI',system-ui,sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="t-toolbar">
+  <span class="t-logo">EVENT EDITOR</span>
+  <div class="t-sep"></div>
+  <button class="t-btn primary" onclick="addEvent()">+ NEW EVENT</button>
+  <div class="t-sep"></div>
+  <button class="t-btn" onclick="exportJSON()">EXPORT JSON</button>
+  <button class="t-btn" onclick="importJSON()">IMPORT JSON</button>
+  <div class="t-sep"></div>
+  <button class="t-btn" onclick="copyEventJS()">COPY events.js</button>
+  <div id="ev-toolbar-right">
+    <select class="ev-filter-sel" id="filter-type" onchange="renderList()">
+      <option value="">All Types</option>
+      <option value="breakthrough">Breakthrough</option>
+      <option value="shift">Shift</option>
+      <option value="crisis">Crisis</option>
+      <option value="escalation">Escalation</option>
+      <option value="opportunity">Opportunity</option>
+      <option value="endgame">Endgame</option>
+    </select>
+    <select class="ev-filter-sel" id="filter-domain" onchange="renderList()">
+      <option value="">All Domains</option>
+    </select>
+    <select class="ev-filter-sel" id="filter-polity" onchange="renderList()">
+      <option value="">All Polities</option>
+      <option value="dem">Democracy</option>
+      <option value="auth">Authoritarian</option>
+      <option value="corp">Corporate</option>
+      <option value="ns">Non-State</option>
+    </select>
+    <input id="ev-search-box" placeholder="Search events…" oninput="renderList()">
+  </div>
+</div>
+
+<div id="ev-main-area">
+  <div id="event-list-panel">
+    <div id="list-header">
+      <span style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#4a5568;text-transform:uppercase;">Events</span>
+      <span id="list-count">0</span>
+    </div>
+    <div id="event-list"></div>
+  </div>
+  <div id="ev-edit-panel">
+    <div id="ev-ph">
+      <div id="ev-ph-title">Select an event to edit</div>
+      <button id="ev-ph-del" style="display:none" onclick="deleteSelected()">DELETE</button>
+    </div>
+    <div class="ptabs" id="ptabs" style="display:none">
+      <button class="ptab active" data-tab="core"   onclick="switchTab('core')">CORE</button>
+      <button class="ptab"        data-tab="dem"    onclick="switchTab('dem')">DEMOCRACY</button>
+      <button class="ptab"        data-tab="auth"   onclick="switchTab('auth')">AUTHORITARIAN</button>
+      <button class="ptab"        data-tab="corp"   onclick="switchTab('corp')">CORPORATE</button>
+      <button class="ptab"        data-tab="ns"     onclick="switchTab('ns')">NON-STATE</button>
+    </div>
+    <div id="ev-pb"><div class="empty-state">Select an event from the list to edit it.<br>Use "+ New Event" to create one.</div></div>
+  </div>
+</div>
+
+<script type="module">
+import { EVENTS as RAW_EVENTS } from './events.js';
+import { TECHS } from './techTree.js';
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  events: [],
+  sel: null,
+  tab: 'core',
+};
+
+const POLITY_LABELS = { dem:'Democracy', auth:'Authoritarian', corp:'Corporate', ns:'Non-State' };
+const POLITY_KEYS   = ['dem','auth','corp','ns'];
+const EFX_KEYS      = ['mil','ctrl','leg','cap','econ'];
+const EFX_LABELS    = { mil:'Military', ctrl:'Control', leg:'Legitimacy', cap:'Capacity', econ:'Economy' };
+
+const DOMAINS = ['found','gov','surv','econ','mil','cult','bio','cog'];
+const DOMAIN_LABELS = { found:'Foundation', gov:'Governance', surv:'Surveillance', econ:'Economic', mil:'Military', cult:'Cultural', bio:'Bio/Neuro', cog:'Cognitive' };
+
+const TYPE_LIST = ['breakthrough','shift','crisis','escalation','opportunity','endgame'];
+
+// populate domain filter
+const domFilt = document.getElementById('filter-domain');
+DOMAINS.forEach(d => {
+  const o = document.createElement('option');
+  o.value = d; o.textContent = DOMAIN_LABELS[d];
+  domFilt.appendChild(o);
+});
+
+function deepClone(x) { return JSON.parse(JSON.stringify(x)); }
+
+function loadEvents() {
+  S.events = RAW_EVENTS.map(e => {
+    const ev = deepClone(e);
+    POLITY_KEYS.forEach(p => {
+      if (!ev.effects) ev.effects = {};
+      if (!ev.effects[p]) ev.effects[p] = {};
+      EFX_KEYS.forEach(k => { if (ev.effects[p][k] === undefined) ev.effects[p][k] = 0; });
+    });
+    if (!ev.flavor) ev.flavor = {};
+    if (!ev.target) ev.target = { dem:false, auth:false, corp:false, ns:false };
+    if (ev.repeatable === undefined) ev.repeatable = false;
+    if (!ev.requires) ev.requires = [];
+    return ev;
+  });
+}
+
+loadEvents();
+
+// ═══════════════════════════════════════════
+// RENDER LIST
+// ═══════════════════════════════════════════
+function renderList() {
+  const q     = document.getElementById('ev-search-box').value.toLowerCase();
+  const fType = document.getElementById('filter-type').value;
+  const fDom  = document.getElementById('filter-domain').value;
+  const fPol  = document.getElementById('filter-polity').value;
+
+  const filtered = S.events.filter(ev => {
+    if (fType && ev.type !== fType) return false;
+    if (fDom  && ev.domain !== fDom) return false;
+    if (fPol  && !ev.target[fPol]) return false;
+    if (q && !ev.name.toLowerCase().includes(q) && !ev.id.toLowerCase().includes(q) && !ev.desc.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('list-count').textContent = `${filtered.length} / ${S.events.length}`;
+
+  const el = document.getElementById('event-list');
+  el.innerHTML = '';
+  filtered.forEach(ev => {
+    const div = document.createElement('div');
+    div.className = 'ev-row' + (ev.id === S.sel ? ' selected' : '') + (ev._new ? ' new-ev' : '');
+    div.innerHTML = `
+      <div class="ev-name">${ev.name}</div>
+      <div class="ev-meta">
+        <span class="ev-tag tag-${ev.domain}">${DOMAIN_LABELS[ev.domain]||ev.domain}</span>
+        <span class="ev-tag type-${ev.type}">${ev.type}</span>
+        ${POLITY_KEYS.filter(p=>ev.target[p]).map(p=>`<span class="ev-tag" style="background:rgba(255,255,255,0.06);color:#6b7280">${p.toUpperCase()}</span>`).join('')}
+      </div>
+      <div class="ev-id">${ev.id}</div>
+    `;
+    div.onclick = () => selectEvent(ev.id);
+    el.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════
+// SELECT / EDIT
+// ═══════════════════════════════════════════
+function selectEvent(id) {
+  S.sel = id;
+  S.tab = 'core';
+  renderList();
+  renderPanel();
+}
+
+function switchTab(tab) {
+  S.tab = tab;
+  document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  renderPanelBody();
+}
+window.switchTab = switchTab;
+
+function getEv() { return S.events.find(e => e.id === S.sel); }
+
+function renderPanel() {
+  const ev = getEv();
+  document.getElementById('ptabs').style.display    = ev ? '' : 'none';
+  document.getElementById('ev-ph-del').style.display = ev ? '' : 'none';
+  document.getElementById('ev-ph-title').textContent = ev ? ev.name : 'Select an event to edit';
+  document.querySelectorAll('.ptab').forEach(b => b.classList.toggle('active', b.dataset.tab === S.tab));
+  renderPanelBody();
+}
+
+function renderPanelBody() {
+  const ev = getEv();
+  if (!ev) {
+    document.getElementById('ev-pb').innerHTML = '<div class="empty-state">Select an event from the list to edit it.<br>Use "+ New Event" to create one.</div>';
+    return;
+  }
+
+  const pb = document.getElementById('ev-pb');
+
+  if (S.tab === 'core') {
+    pb.innerHTML = `
+      <div class="fg">
+        <label class="fl">ID (unique, snake_case)</label>
+        <input class="fi" id="f-id" value="${ev.id}">
+      </div>
+      <div class="fg">
+        <label class="fl">Name</label>
+        <input class="fi" id="f-name" value="${esc(ev.name)}">
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label class="fl">Domain</label>
+          <select class="fi" id="f-domain">
+            ${DOMAINS.map(d=>`<option value="${d}"${ev.domain===d?' selected':''}>${DOMAIN_LABELS[d]}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Type</label>
+          <select class="fi" id="f-type">
+            ${TYPE_LIST.map(t=>`<option value="${t}"${ev.type===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Description</label>
+        <textarea class="fi" id="f-desc" rows="3">${esc(ev.desc)}</textarea>
+      </div>
+      <div class="row2">
+        <div class="fg">
+          <label class="fl">Base Probability (0–1)</label>
+          <input class="fi" type="number" id="f-prob" min="0" max="1" step="0.01" value="${ev.base_prob}">
+        </div>
+        <div class="fg">
+          <label class="fl">Repeatable</label>
+          <select class="fi" id="f-rep">
+            <option value="false"${!ev.repeatable?' selected':''}>No</option>
+            <option value="true"${ev.repeatable?' selected':''}>Yes</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Target Polities</label>
+        <div class="target-row">
+          ${POLITY_KEYS.map(p=>`
+            <label class="tg${ev.target[p]?' on':''}" id="tg-${p}" onclick="toggleTarget('${p}')">
+              <div class="tg-dot"></div>
+              <span class="tg-lbl">${p.toUpperCase()}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Required Techs</label>
+        <div class="req-list" id="req-list">
+          ${ev.requires.map(r=>`<span class="req-tag" onclick="removeReq('${r}')"><span class="x">×</span> ${r}</span>`).join('')}
+          <button class="req-add" onclick="addReq()">+ Add Tech</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('f-id').oninput      = e => { ev.id = e.target.value.trim(); renderList(); };
+    document.getElementById('f-name').oninput    = e => { ev.name = e.target.value; document.getElementById('ev-ph-title').textContent = ev.name; renderList(); };
+    document.getElementById('f-domain').onchange = e => { ev.domain = e.target.value; renderList(); };
+    document.getElementById('f-type').onchange   = e => { ev.type = e.target.value; renderList(); };
+    document.getElementById('f-desc').oninput    = e => { ev.desc = e.target.value; };
+    document.getElementById('f-prob').oninput    = e => { ev.base_prob = parseFloat(e.target.value)||0; };
+    document.getElementById('f-rep').onchange    = e => { ev.repeatable = e.target.value === 'true'; };
+
+  } else {
+    const p = S.tab;
+    const efx = ev.effects[p] || {};
+    EFX_KEYS.forEach(k => { if (efx[k] === undefined) efx[k] = 0; });
+    const fl = (ev.flavor && ev.flavor[p]) || '';
+
+    pb.innerHTML = `
+      <div class="fg">
+        <label class="fl">Effects for ${POLITY_LABELS[p]}</label>
+        <div class="efx-grid">
+          ${EFX_KEYS.map(k=>`
+            <div class="efx">
+              <div class="efx-lbl">${EFX_LABELS[k]}</div>
+              <input class="fi" type="number" id="efx-${k}" value="${efx[k]||0}" step="1">
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:#3d4452">Positive = gain, negative = loss. Applies only if polity is targeted.</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Flavor Quote (${POLITY_LABELS[p]})</label>
+        <textarea class="fi" id="fl-${p}" rows="4" placeholder="In-world quote from a ${POLITY_LABELS[p]} perspective…">${esc(fl)}</textarea>
+      </div>
+    `;
+
+    EFX_KEYS.forEach(k => {
+      document.getElementById(`efx-${k}`).oninput = e => {
+        if (!ev.effects[p]) ev.effects[p] = {};
+        ev.effects[p][k] = parseInt(e.target.value)||0;
+      };
+    });
+    document.getElementById(`fl-${p}`).oninput = e => {
+      if (!ev.flavor) ev.flavor = {};
+      ev.flavor[p] = e.target.value;
+    };
+  }
+}
+
+// ═══════════════════════════════════════════
+// TARGET TOGGLE
+// ═══════════════════════════════════════════
+window.toggleTarget = function(p) {
+  const ev = getEv(); if (!ev) return;
+  ev.target[p] = !ev.target[p];
+  const el = document.getElementById(`tg-${p}`);
+  if (el) el.classList.toggle('on', ev.target[p]);
+  renderList();
+};
+
+// ═══════════════════════════════════════════
+// REQUIRES MANAGEMENT
+// ═══════════════════════════════════════════
+window.removeReq = function(techId) {
+  const ev = getEv(); if (!ev) return;
+  ev.requires = ev.requires.filter(r => r !== techId);
+  renderPanelBody();
+};
+
+window.addReq = function() {
+  const ev = getEv(); if (!ev) return;
+  const existing = new Set(ev.requires);
+  const opts = TECHS.filter(t => !existing.has(t.id));
+  const choice = prompt(
+    'Enter tech ID to require:\n\nAvailable:\n' + opts.map(t => `${t.id} — ${t.name}`).join('\n')
+  );
+  if (choice && choice.trim()) {
+    const tid = choice.trim();
+    if (TECHS.find(t => t.id === tid)) {
+      ev.requires.push(tid);
+      renderPanelBody();
+    } else {
+      alert(`Unknown tech id: "${tid}"`);
+    }
+  }
+};
+
+// ═══════════════════════════════════════════
+// ADD / DELETE
+// ═══════════════════════════════════════════
+window.addEvent = function() {
+  const id = 'event_' + Date.now();
+  const ev = {
+    id, name:'New Event', domain:'found', type:'shift',
+    desc:'',
+    requires:[], base_prob:0.10, repeatable:false,
+    target:{ dem:true, auth:false, corp:false, ns:false },
+    effects:{
+      dem:{mil:0,ctrl:0,leg:0,cap:0,econ:0},
+      auth:{mil:0,ctrl:0,leg:0,cap:0,econ:0},
+      corp:{mil:0,ctrl:0,leg:0,cap:0,econ:0},
+      ns:{mil:0,ctrl:0,leg:0,cap:0,econ:0},
+    },
+    flavor:{ dem:'', auth:'', corp:'', ns:'' },
+    _new: true,
+  };
+  S.events.push(ev);
+  S.sel = id;
+  S.tab = 'core';
+  renderList();
+  renderPanel();
+  const el = document.getElementById('event-list');
+  el.scrollTop = el.scrollHeight;
+};
+
+window.deleteSelected = function() {
+  const ev = getEv(); if (!ev) return;
+  if (!confirm(`Delete "${ev.name}"?`)) return;
+  S.events = S.events.filter(e => e.id !== S.sel);
+  S.sel = null;
+  renderList();
+  renderPanel();
+};
+
+// ═══════════════════════════════════════════
+// EXPORT / IMPORT / COPY
+// ═══════════════════════════════════════════
+window.exportJSON = function() {
+  const blob = new Blob([JSON.stringify(S.events, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'events_export.json';
+  a.click();
+};
+
+window.importJSON = function() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data)) { alert('Expected a JSON array of events.'); return; }
+        S.events = data.map(ev => {
+          POLITY_KEYS.forEach(p => {
+            if (!ev.effects) ev.effects = {};
+            if (!ev.effects[p]) ev.effects[p] = {};
+            EFX_KEYS.forEach(k => { if (ev.effects[p][k] === undefined) ev.effects[p][k] = 0; });
+          });
+          if (!ev.flavor)  ev.flavor = {};
+          if (!ev.target)  ev.target = { dem:false, auth:false, corp:false, ns:false };
+          if (ev.repeatable === undefined) ev.repeatable = false;
+          if (!ev.requires) ev.requires = [];
+          return ev;
+        });
+        S.sel = null;
+        renderList();
+        renderPanel();
+      } catch(err) { alert('Parse error: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+};
+
+window.copyEventJS = function() {
+  const lines = [];
+  lines.push(`// events.js — auto-exported from event editor`);
+  lines.push(`// ${S.events.length} events total`);
+  lines.push(``);
+  lines.push(`export const EVENTS = [`);
+  S.events.forEach((ev, i) => {
+    const clean = {...ev};
+    delete clean._new;
+    lines.push('  ' + JSON.stringify(clean) + (i < S.events.length - 1 ? ',' : ''));
+  });
+  lines.push(`];`);
+  lines.push(``);
+  lines.push(`export const EVENT_STATE = {};`);
+  lines.push(`EVENTS.forEach(e => { EVENT_STATE[e.id] = { fired:false, turn:null }; });`);
+  lines.push(``);
+  lines.push(`export function getTriggeredEvents(researchedTechs, polityKey, turnNumber) {`);
+  lines.push(`  const triggered = [];`);
+  lines.push(`  for (const ev of EVENTS) {`);
+  lines.push(`    if (!ev.repeatable && EVENT_STATE[ev.id].fired) continue;`);
+  lines.push(`    if (!ev.target[polityKey]) continue;`);
+  lines.push(`    if (!ev.requires.every(id => researchedTechs.has(id))) continue;`);
+  lines.push(`    if (Math.random() < ev.base_prob) {`);
+  lines.push(`      EVENT_STATE[ev.id].fired = true;`);
+  lines.push(`      EVENT_STATE[ev.id].turn = turnNumber;`);
+  lines.push(`      triggered.push(ev);`);
+  lines.push(`    }`);
+  lines.push(`  }`);
+  lines.push(`  return triggered;`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`export function getAvailableEvents(researchedTechs, polityKey) {`);
+  lines.push(`  return EVENTS.filter(ev => ev.target[polityKey] && ev.requires.every(id => researchedTechs.has(id)));`);
+  lines.push(`}`);
+  lines.push(``);
+  lines.push(`export function resetEventState() {`);
+  lines.push(`  EVENTS.forEach(e => { EVENT_STATE[e.id] = { fired:false, turn:null }; });`);
+  lines.push(`}`);
+
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    alert(`Copied events.js (${S.events.length} events) to clipboard.\nPaste into events.js to save.`);
+  }).catch(() => {
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="background:#111;color:#e0e0e0;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap">' + lines.join('\n').replace(/</g,'&lt;') + '</pre>');
+  });
+};
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderList();
+renderPanel();
+
+</script>
+</body>
+</html>
