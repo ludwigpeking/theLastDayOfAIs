@@ -32,11 +32,42 @@ The "AI Security Dilemma" forces all parties to accelerate — the fear that if 
 
 Choose your role. Shape the outcome.`;
 
-// GDP = pop * sqrt(infra) * lit^4 * internet   (game index units)
-// military = GDP / 10  (entropy ≈ 10 for all countries via SQL formula)
-function calcGdp(pop, infra, lit, internet) {
-    return +(pop * Math.sqrt(infra) * Math.pow(lit,4) * internet).toFixed(1);
+// GDP = pop * sqrt(infra) * lit^4 * internet * (1+techBuff)
+// military = GDP / ideologyEntropy * (1+techBuff)
+function calcGdp(pop, infra, lit, internet, techBuff = 0) {
+    return +(pop * Math.sqrt(infra) * Math.pow(lit, 4) * internet * (1 + techBuff)).toFixed(1);
 }
+
+// ═══════════════════════════════════════════
+//  SIMULATION CONSTANTS
+// ═══════════════════════════════════════════
+const SIM = {
+    TECH_BUFF_PER_TECH: 0.05,   // each researched tech adds 5% buff, cap 100%
+    DEFAULT_ENTROPY: 10,         // ideology entropy denominator for military
+    BASE_INCOME: { major: 100, minor: 60, tech: 80, nsa: 50 },
+    SP_DRIFT_RATE: 0.004,        // regime drift per unit soft power differential per turn
+    WAR_NOISE: 0.30,             // ±30% randomness in war outcomes
+    REGIME_VALUES: { anarcho_liberal: 0, democracy: 1, authoritarian: 2, totalitarian: 3 },
+    REGIME_NAMES: ['anarcho_liberal','democracy','authoritarian','totalitarian'],
+    // Ideology buffs: multiplied by entity's share in the country each turn
+    // Keys match ideo.json column ids
+    IDEOLOGY_BUFFS: {
+        totalitarian:  { social_cost: 0.25, mil_cost: -0.50 },
+        authoritarian: { social_cost: 0.35, mil_cost: -1.00 },
+        democracy:     { social_cost: 0.20, soft_power: 1.50 },
+        alib:          { social_cost: -0.10, soft_power: 2.00 },
+        catholic:      { social_cost: 0.30, soft_power: 0.50 },
+        buddhist:      { social_cost: 0.50, mil_cost: -0.70, soft_power: 2.00 },
+        islamic:       { social_cost: 0.20 },
+        green:         { gdp_penalty: 5.0, soft_power: 4.00 },
+        alqaeda:       { mil_cost: -6.00, surv_cost: 10.00 },
+        wagner:        { mil_cost: -6.00 },
+        opensoc:       { soft_power: 8.00 },
+        bilder:        { soft_power: 6.00 },
+        mars:          { soft_power: 4.00 },
+        hamas:         { mil_cost: -3.00 },
+    },
+};
 
 // Countries
 const COUNTRIES = {
@@ -141,14 +172,42 @@ const BIG_TECH = ['Google','Microsoft','OpenAI','Tesla/SpaceX','Apple','NVIDIA',
 const NSA_LIST = ['Catholic Church','Islamic Cooperation Org.','Buddhist Networks','Open Society (Soros)','The Mars Society','Greenpeace','Wagner Group','Bilderberg Group','Hamas','Al-Qaeda'];
 
 
+// Return live stats for a country code, falling back to static COUNTRIES
+function liveC(code) {
+    const base = COUNTRIES[code];
+    if (!base) return null;
+    const cs = G.cs[code];
+    if (!cs) return base;
+    return {
+        ...base,
+        gdp:      cs.gdp,
+        military: cs.military,
+        infra:    cs.infra,
+        lit:      cs.lit,
+        net:      cs.net,
+        pop:      cs.pop,
+        regime:   cs.regime,
+        faction:  G.faction[code] ?? base.faction,
+    };
+}
+
+function liveShares(corp) {
+    return G.corpShares[corp.name] || corp.shares;
+}
+function liveNsaSizes(nsa) {
+    return G.nsaSizes[nsa.id] || nsa.sizes;
+}
+
 function corpRevenue(corp) {
-    return Object.entries(corp.shares).reduce((s,[k,sh]) => {
-        return COUNTRIES[k] ? s + COUNTRIES[k].gdp * sh / 100 : s;
+    return Object.entries(liveShares(corp)).reduce((s,[k,sh]) => {
+        const c = liveC(k);
+        return c ? s + c.gdp * sh / 100 : s;
     }, 0).toFixed(1);
 }
 function nsaEcoSize(nsa) {
-    return (0.1 * Object.entries(nsa.sizes).reduce((s,[k,sz]) => {
-        return COUNTRIES[k] ? s + sz * COUNTRIES[k].gdp : s;
+    return (0.1 * Object.entries(liveNsaSizes(nsa)).reduce((s,[k,sz]) => {
+        const c = liveC(k);
+        return c ? s + sz * c.gdp : s;
     }, 0)).toFixed(1);
 }
 
@@ -244,6 +303,8 @@ const RANDOM_EVENTS = [
 const G = {
     turn: 1, role: null, roleName: '', playerCode: '', regime: 'democracy',
     pp: 100, techs: new Set(), selectedCode: null, agi: 15, log: [],
+    cs: {}, sp: {}, security: {}, legitimacy: {}, faction: {},
+    income: 0, expenses: 0, boycotts: {}, corpShares: {}, nsaSizes: {},
 };
 
 initTechTree({ G, addLog, updateHUD });
@@ -302,6 +363,7 @@ window.startGame = function(){
         G.regime=pickedRole;
     }
     G.pp=pickedRole==='major'?500:pickedRole==='minor'?300:400;
+    initCountryState();
     showScreen(null);
     document.getElementById('hud').style.display='block';
     updateHUD(); renderTechTree();
@@ -335,25 +397,59 @@ function onCountryClick(code, rawName){
     G.selectedCode=code;
     document.getElementById('panel-country').classList.remove('off');
     const c=code?COUNTRIES[code]:null;
+    const cs = G.cs[code] || c;
+    const liveRegime = cs?.regime || c?.regime || '';
     document.getElementById('cn-name').textContent=c?`${c.f} ${c.name}`:(rawName||'?');
     const rb=document.getElementById('cn-regime');
-    rb.textContent=c?c.regime.replace('_',' '):''; rb.className=`regime-pill rp-${c?.regime||''}`;
+    rb.textContent=liveRegime.replace('_',' '); rb.className=`regime-pill rp-${liveRegime}`;
     const stats=document.getElementById('cn-stats');
     if(c){
-        const fac=c.faction?`<span style="color:#4a7a5a">${COUNTRIES[c.faction]?.name??c.faction} bloc</span>`:`<span style="color:#4a9eff">Independent</span>`;
+        const liveFaction = G.faction[code] ?? c.faction;
+        const fac=liveFaction?`<span class="stat-faction">${COUNTRIES[liveFaction]?.f??''} ${COUNTRIES[liveFaction]?.name??liveFaction} bloc</span>`:`<span class="stat-ind">Independent</span>`;
+        const sec  = G.security[code]  != null ? G.security[code]  : '—';
+        const leg  = G.legitimacy[code]!= null ? G.legitimacy[code]: '—';
         stats.innerHTML=`
             <div class="stat"><span class="stat-k">Type</span><span class="stat-v">${c.type}</span></div>
             <div class="stat"><span class="stat-k">Faction</span><span class="stat-v">${fac}</span></div>
-            <div class="stat"><span class="stat-k">Population</span><span class="stat-v">${c.pop}M</span></div>
-            <div class="stat"><span class="stat-k">GDP Index</span><span class="stat-v">${c.gdp.toLocaleString()}</span></div>
-            <div class="stat"><span class="stat-k">Military</span><span class="stat-v">${c.military.toLocaleString()}</span></div>
-            <div class="stat"><span class="stat-k">Infrastructure</span><span class="stat-v">${c.infra}</span></div>
-            <div class="stat"><span class="stat-k">Literacy</span><span class="stat-v">${(c.lit*100).toFixed(0)}%</span></div>
-            <div class="stat"><span class="stat-k">Internet</span><span class="stat-v">${(c.net*100).toFixed(0)}%</span></div>`;
+            <div class="stat"><span class="stat-k">Population</span><span class="stat-v">${cs?.pop??c.pop}M</span></div>
+            <div class="stat"><span class="stat-k">GDP</span><span class="stat-v">${(cs?.gdp??c.gdp).toLocaleString()}</span></div>
+            <div class="stat"><span class="stat-k">Military</span><span class="stat-v">${(cs?.military??c.military).toLocaleString()}</span></div>
+            <div class="stat"><span class="stat-k">Infrastructure</span><span class="stat-v">${cs?.infra??c.infra}</span></div>
+            <div class="stat"><span class="stat-k">Literacy</span><span class="stat-v">${((cs?.lit??c.lit)*100).toFixed(0)}%</span></div>
+            <div class="stat"><span class="stat-k">Internet</span><span class="stat-v">${((cs?.net??c.net)*100).toFixed(0)}%</span></div>
+            <div class="stat"><span class="stat-k">Security</span><span class="stat-v">${sec}</span></div>
+            <div class="stat"><span class="stat-k">Legitimacy</span><span class="stat-v">${leg}</span></div>`;
     } else {
-        stats.innerHTML=`<div style="font-size:.7rem;color:#2a4a5a;margin-top:4px">No data for this territory.</div>`;
+        stats.innerHTML=`<div class="stat-na">No data for this territory.</div>`;
     }
     renderActions(code);
+}
+
+function refreshCountryPanel(code) {
+    if (!code || document.getElementById('panel-country').classList.contains('off')) return;
+    const c = COUNTRIES[code];
+    if (!c) return;
+    const cs = G.cs[code] || c;
+    const liveRegime = cs?.regime || c.regime;
+    const rb = document.getElementById('cn-regime');
+    rb.textContent = liveRegime.replace('_',' '); rb.className = `regime-pill rp-${liveRegime}`;
+    const liveFaction = G.faction[code] ?? c.faction;
+    const fac = liveFaction
+        ? `<span class="stat-faction">${COUNTRIES[liveFaction]?.f??''} ${COUNTRIES[liveFaction]?.name??liveFaction} bloc</span>`
+        : `<span class="stat-ind">Independent</span>`;
+    const sec = G.security[code]  != null ? G.security[code]  : '—';
+    const leg = G.legitimacy[code]!= null ? G.legitimacy[code]: '—';
+    document.getElementById('cn-stats').innerHTML = `
+        <div class="stat"><span class="stat-k">Type</span><span class="stat-v">${c.type}</span></div>
+        <div class="stat"><span class="stat-k">Faction</span><span class="stat-v">${fac}</span></div>
+        <div class="stat"><span class="stat-k">Population</span><span class="stat-v">${cs?.pop??c.pop}M</span></div>
+        <div class="stat"><span class="stat-k">GDP</span><span class="stat-v">${(cs?.gdp??c.gdp).toLocaleString()}</span></div>
+        <div class="stat"><span class="stat-k">Military</span><span class="stat-v">${(cs?.military??c.military).toLocaleString()}</span></div>
+        <div class="stat"><span class="stat-k">Infrastructure</span><span class="stat-v">${cs?.infra??c.infra}</span></div>
+        <div class="stat"><span class="stat-k">Literacy</span><span class="stat-v">${((cs?.lit??c.lit)*100).toFixed(0)}%</span></div>
+        <div class="stat"><span class="stat-k">Internet</span><span class="stat-v">${((cs?.net??c.net)*100).toFixed(0)}%</span></div>
+        <div class="stat"><span class="stat-k">Security</span><span class="stat-v">${sec}</span></div>
+        <div class="stat"><span class="stat-k">Legitimacy</span><span class="stat-v">${leg}</span></div>`;
 }
 
 window.closeCountryPanel=function(){
@@ -365,15 +461,23 @@ function renderActions(code){
     const el=document.getElementById('cn-actions');
     const acts=ACTIONS[G.regime]||[];
     const isSelf=code&&code===G.playerCode;
-    const relevant=acts.filter(a=>isSelf?true:a.t==='country');
-    if(!relevant.length){el.innerHTML='';return;}
-    el.innerHTML='<div class="act-hdr">AVAILABLE ACTIONS</div>'+
-        relevant.slice(0,7).map(a=>{
+    const relevant=acts.filter(a=>isSelf ? a.t==='self' : a.t==='country');
+    const selfActs=isSelf?[]:acts.filter(a=>a.t==='self');
+    if(!relevant.length && !selfActs.length){el.innerHTML='';return;}
+    const hdr=isSelf?'YOUR ACTIONS':'ACTIONS AGAINST '+( COUNTRIES[code]?.name||code);
+    el.innerHTML=`<div class="act-hdr">${hdr}</div>`+
+        relevant.slice(0,8).map(a=>{
             const ok=G.pp>=a.cost;
             return `<div class="act-btn${ok?'':' cant'}" ${ok?`onclick="doAction('${a.id}','${code||''}')"`:''} title="${a.l}">
                 <span>${a.l}</span><span class="act-cost">${a.cost} PP</span>
             </div>`;
-        }).join('');
+        }).join('')+
+        (!isSelf && selfActs.length ? '<div class="act-hdr act-hdr-self">YOUR ACTIONS</div>'+selfActs.slice(0,5).map(a=>{
+            const ok=G.pp>=a.cost;
+            return `<div class="act-btn${ok?'':' cant'}" ${ok?`onclick="doAction('${a.id}','${G.playerCode||''}')"`:''} title="${a.l}">
+                <span>${a.l}</span><span class="act-cost">${a.cost} PP</span>
+            </div>`;
+        }).join('') : '');
 }
 
 window.doAction=function(actId,targetCode){
@@ -382,8 +486,11 @@ window.doAction=function(actId,targetCode){
     G.pp-=act.cost;
     const tname=targetCode&&COUNTRIES[targetCode]?`${COUNTRIES[targetCode].f} ${COUNTRIES[targetCode].name}`:(targetCode||'target');
     addLog(act.msg.replace('$T',tname), actId.includes('war')?'crit':'hi');
-    if(actId==='inv_ai') G.agi=Math.min(100,G.agi+2);
-    updateHUD(); renderActions(G.selectedCode);
+    applyActionEffect(actId, targetCode);
+    updateHUD();
+    refreshCountryPanel(G.selectedCode);
+    renderActions(G.selectedCode);
+    if(activeTab==='domestic') renderDomestic();
 };
 
 let activeTab='earth';
@@ -418,24 +525,592 @@ function renderTechTree() { if(activeTab==='tech'){ tcDraw(); tcUpdateCard(); } 
 
 
 // ═══════════════════════════════════════════
+//  SIMULATION ENGINE
+// ═══════════════════════════════════════════
+
+function calcIdeologyMultipliers(code) {
+    const r = { gdp_penalty: 0, social_cost: 0, mil_cost: 0, surv_cost: 0, soft_power: 0 };
+    for (const nsa of NSAS) {
+        const share = (liveNsaSizes(nsa))[code] || 0;
+        if (!share) continue;
+        const b = SIM.IDEOLOGY_BUFFS[nsa.id];
+        if (!b) continue;
+        for (const k of Object.keys(b)) r[k] = (r[k] || 0) + b[k] * share;
+    }
+    for (const fac of POLITY_FACTIONS) {
+        const share = fac.sizes[code] || 0;
+        if (!share) continue;
+        const b = SIM.IDEOLOGY_BUFFS[fac.id];
+        if (!b) continue;
+        for (const k of Object.keys(b)) r[k] = (r[k] || 0) + b[k] * share;
+    }
+    return r;
+}
+
+function calcTechBuff() {
+    return Math.min(1.0, G.techs.size * SIM.TECH_BUFF_PER_TECH);
+}
+
+function recomputeCountryStats(code) {
+    const cs = G.cs[code];
+    if (!cs) return;
+    const techBuff = code === G.playerCode ? calcTechBuff() : 0;
+    const mults = calcIdeologyMultipliers(code);
+    const boycottPenalty = G.boycotts[code] || 0;
+    const totalBuff = techBuff - mults.gdp_penalty - boycottPenalty;
+    cs.gdp = calcGdp(cs.pop, cs.infra, cs.lit, cs.net, totalBuff);
+    cs.military = +(cs.gdp / SIM.DEFAULT_ENTROPY * (1 + techBuff)).toFixed(1);
+}
+
+function initSoftPowerMatrix() {
+    for (const from of Object.keys(COUNTRIES)) {
+        G.sp[from] = G.sp[from] || {};
+        for (const to of Object.keys(COUNTRIES)) {
+            if (from === to) continue;
+            const cf = COUNTRIES[from], ct = COUNTRIES[to];
+            let sp = 5;
+            if (ct.faction === from) sp = 40;
+            else if (cf.faction === to) sp = 20;
+            if (cf.regime === ct.regime) sp += 8;
+            G.sp[from][to] = sp;
+        }
+    }
+}
+
+function initCountryState() {
+    G.cs = {}; G.sp = {}; G.security = {}; G.legitimacy = {}; G.faction = {}; G.boycotts = {}; G.corpShares = {}; G.nsaSizes = {};
+    for (const corp of CORPS) G.corpShares[corp.name] = { ...corp.shares };
+    for (const nsa of NSAS) G.nsaSizes[nsa.id] = { ...nsa.sizes };
+    for (const code of Object.keys(COUNTRIES)) {
+        const c = COUNTRIES[code];
+        G.cs[code] = { pop: c.pop, infra: c.infra, lit: c.lit, net: c.net,
+                       regime: c.regime, gdp: c.gdp, military: c.military };
+        G.security[code]   = c.regime === 'totalitarian' ? 85 : c.regime === 'authoritarian' ? 70 : 55;
+        G.legitimacy[code] = c.regime === 'democracy' ? 80 : c.regime === 'authoritarian' ? 60 : 50;
+        G.faction[code]    = c.faction;
+    }
+    initSoftPowerMatrix();
+}
+
+function regimeVal(regime) {
+    return SIM.REGIME_VALUES[regime] ?? 1;
+}
+function regimeName(val) {
+    const v = Math.max(0, Math.min(3, Math.round(val)));
+    return SIM.REGIME_NAMES[v];
+}
+
+function ideologyPushToward(code, targetRegime, strength) {
+    const cs = G.cs[code];
+    if (!cs) return;
+    const cur = regimeVal(cs.regime);
+    const tgt = regimeVal(targetRegime);
+    const next = cur + (tgt - cur) * strength;
+    cs.regime = regimeName(next);
+    if (code === G.playerCode) G.regime = cs.regime;
+}
+
+function simSoftPowerDrift() {
+    for (const to of Object.keys(COUNTRIES)) {
+        let weightedSum = 0, totalWeight = 0;
+        for (const from of Object.keys(COUNTRIES)) {
+            if (from === to) continue;
+            const sp = G.sp[from]?.[to] || 0;
+            if (!sp) continue;
+            const mults = calcIdeologyMultipliers(from);
+            const projSP = sp * (1 + mults.soft_power * 0.1);
+            weightedSum += regimeVal(G.cs[from].regime) * projSP;
+            totalWeight += projSP;
+        }
+        if (!totalWeight) continue;
+        const targetVal = weightedSum / totalWeight;
+        const curVal    = regimeVal(G.cs[to].regime);
+        const drift     = (targetVal - curVal) * SIM.SP_DRIFT_RATE;
+        if (Math.abs(drift) > 0.01) {
+            const newVal = curVal + drift;
+            const newRegime = regimeName(newVal);
+            if (newRegime !== G.cs[to].regime) {
+                if (to === G.playerCode) {
+                    addLog(`Ideology shift: ${G.roleName} drifts toward ${newRegime.replace('_',' ')}.`, 'hi');
+                    G.regime = newRegime;
+                }
+                G.cs[to].regime = newRegime;
+            }
+        }
+    }
+}
+
+function resolveWar(attacker, defender, isTotal) {
+    const atkCs = G.cs[attacker], defCs = G.cs[defender];
+    if (!atkCs || !defCs) return;
+    const atkMil = atkCs.military * (isTotal ? 1.6 : 1.0);
+    const defMil = defCs.military;
+    const noise  = 1 + (Math.random() - 0.5) * 2 * SIM.WAR_NOISE;
+    const atkWins = atkMil * noise > defMil;
+    const af = COUNTRIES[attacker]?.f || attacker, df = COUNTRIES[defender]?.f || defender;
+    const an = COUNTRIES[attacker]?.name || attacker, dn = COUNTRIES[defender]?.name || defender;
+    if (atkWins) {
+        defCs.infra    = Math.max(10, defCs.infra - 10);
+        defCs.military = Math.max(1,  +(defCs.military * 0.65).toFixed(1));
+        G.legitimacy[defender]  = Math.max(0, G.legitimacy[defender]  - 25);
+        G.security[defender]    = Math.max(0, G.security[defender]    - 15);
+        ideologyPushToward(defender, atkCs.regime, 0.25);
+        recomputeCountryStats(defender);
+        addLog(`⚔️ VICTORY: ${af} ${an} defeated ${df} ${dn}. Infra −10, military crushed.`, 'crit');
+        if (isTotal) {
+            atkCs.infra = Math.min(99, atkCs.infra + 2);
+            G.legitimacy[attacker] = Math.min(100, G.legitimacy[attacker] + 5);
+        }
+    } else {
+        atkCs.infra    = Math.max(10, atkCs.infra - 6);
+        atkCs.military = Math.max(1,  +(atkCs.military * 0.75).toFixed(1));
+        G.legitimacy[attacker] = Math.max(0, G.legitimacy[attacker] - 15);
+        recomputeCountryStats(attacker);
+        addLog(`💀 DEFEAT: ${af} ${an} campaign against ${df} ${dn} failed. Infra −6, military weakened.`, 'crit');
+    }
+}
+
+function applyActionEffect(actId, targetCode) {
+    const pc = G.playerCode;
+    const tgt = targetCode || pc;
+    const tcs = G.cs[tgt], pcs = G.cs[pc];
+    switch (actId) {
+        case 'inv_ai':
+            G.agi = Math.min(100, G.agi + 2);
+            break;
+        case 'inv_inf':
+            if (pcs) { pcs.infra = Math.min(99, pcs.infra + 3); recomputeCountryStats(pc); }
+            break;
+        case 'inv_lit':
+            if (pcs) { pcs.lit = Math.min(0.99, pcs.lit + 0.02); recomputeCountryStats(pc); }
+            break;
+        case 'def_cyber':
+            G.security[pc] = Math.min(100, (G.security[pc] || 55) + 10);
+            break;
+        case 'espion':
+            if (tcs) G.security[tgt] = Math.max(0, (G.security[tgt] || 55) - 8);
+            break;
+        case 'cyber_atk':
+            if (tcs) {
+                G.security[tgt] = Math.max(0, (G.security[tgt] || 55) - 12);
+                tcs.infra = Math.max(10, tcs.infra - 2);
+                recomputeCountryStats(tgt);
+            }
+            break;
+        case 'info_war':
+            if (tgt) G.legitimacy[tgt] = Math.max(0, (G.legitimacy[tgt] || 60) - 8);
+            break;
+        case 'softpow':
+            if (pc && tgt && pc !== tgt) {
+                G.sp[pc] = G.sp[pc] || {};
+                G.sp[pc][tgt] = Math.min(100, (G.sp[pc][tgt] || 5) + 6);
+            }
+            break;
+        case 'influence':
+            if (G.role === 'tech') {
+                const corp = CORPS.find(c => c.name === G.playerCode);
+                if (corp && tgt) {
+                    G.corpShares[corp.name][tgt] = Math.min(60, (G.corpShares[corp.name][tgt] || 0) + 1);
+                }
+            } else if (pc && tgt && pc !== tgt) {
+                G.sp[pc] = G.sp[pc] || {};
+                G.sp[pc][tgt] = Math.min(100, (G.sp[pc][tgt] || 5) + 10);
+            }
+            break;
+        case 'boycott':
+            G.boycotts[tgt] = (G.boycotts[tgt] || 0) + 0.05; // 5% GDP hit next tick
+            if (tcs) recomputeCountryStats(tgt);
+            break;
+        case 'puppet':
+            if (tgt && COUNTRIES[tgt]?.type === 'minor') {
+                G.faction[tgt] = pc;
+                addLog(`${COUNTRIES[tgt]?.f} ${COUNTRIES[tgt]?.name} faction shifted toward ${G.roleName}.`, 'hi');
+            }
+            break;
+        case 'internet':
+            if (pcs) { pcs.net = Math.max(0.05, pcs.net - 0.10); recomputeCountryStats(pc); }
+            break;
+        case 'ideology':
+            if (pc && tgt && pc !== tgt) {
+                G.sp[pc] = G.sp[pc] || {};
+                G.sp[pc][tgt] = Math.min(100, (G.sp[pc][tgt] || 5) + 12);
+            }
+            break;
+        case 'disrupt':
+            if (tcs) {
+                tcs.infra = Math.max(10, tcs.infra - 3);
+                G.security[tgt] = Math.max(0, (G.security[tgt] || 55) - 6);
+                recomputeCountryStats(tgt);
+            }
+            break;
+        case 'inv_ctry':
+            if (tcs) {
+                tcs.infra = Math.min(99, tcs.infra + 2);
+                recomputeCountryStats(tgt);
+            }
+            if (G.role === 'tech') {
+                const corp = CORPS.find(c => c.name === G.playerCode);
+                if (corp && tgt) {
+                    G.corpShares[corp.name][tgt] = Math.min(60, (G.corpShares[corp.name][tgt] || 0) + 2);
+                }
+            }
+            break;
+        case 'league':
+            for (const code of Object.keys(COUNTRIES)) {
+                if (COUNTRIES[code].regime === 'democracy' || G.cs[code]?.regime === 'democracy') {
+                    G.legitimacy[code] = Math.min(100, (G.legitimacy[code] || 60) + 4);
+                    G.sp[pc] = G.sp[pc] || {};
+                    G.sp[pc][code] = Math.min(100, (G.sp[pc][code] || 5) + 5);
+                }
+            }
+            break;
+        case 'war': case 'twar':
+            if (tgt && tgt !== pc) resolveWar(pc, tgt, actId === 'twar');
+            break;
+        case 'priv_army':
+            G.security[pc] = Math.min(100, (G.security[pc] || 55) + 15);
+            G.cs[pc] && (G.cs[pc].military = +(G.cs[pc].military * 1.3).toFixed(1));
+            break;
+    }
+}
+
+function calcPlayerIncome() {
+    if (!G.playerCode) return SIM.BASE_INCOME[G.role] || 50;
+    const base = SIM.BASE_INCOME[G.role] || 50;
+    let income = base, expenses = 0;
+    if (G.role === 'major' || G.role === 'minor') {
+        const cs = G.cs[G.playerCode];
+        if (cs) {
+            income  += cs.gdp / 100;
+            const mults = calcIdeologyMultipliers(G.playerCode);
+            expenses = cs.gdp / 100 * Math.max(0, mults.social_cost)
+                     + cs.military / 25 * Math.max(0, 1 + mults.mil_cost);
+        }
+    } else if (G.role === 'tech') {
+        const corp = CORPS.find(c => c.name === G.roleName);
+        if (corp) income += Object.entries(liveShares(corp)).reduce((s,[k,sh]) =>
+            s + (G.cs[k]?.gdp ?? COUNTRIES[k]?.gdp ?? 0) * sh / 100, 0) * 0.02;
+    } else if (G.role === 'nsa') {
+        const nsa = NSAS.find(n => n.name === G.roleName);
+        if (nsa) income += Object.entries(nsa.sizes).reduce((s,[k,sz]) =>
+            s + sz * (G.cs[k]?.gdp ?? COUNTRIES[k]?.gdp ?? 0), 0) * 0.05;
+    }
+    G.income   = Math.round(income);
+    G.expenses = Math.round(expenses);
+    return Math.max(10, G.income - G.expenses);
+}
+
+// ─── NPC AI ─────────────────────────────────────────────────────────────────
+// Utility: pick a random element from array
+function rndPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+// Other country codes (excluding player and self)
+function otherCountries(selfCode) {
+    return Object.keys(COUNTRIES).filter(k => k !== selfCode && k !== G.playerCode);
+}
+// Weighted random choice: [{item, weight}]
+function weightedPick(choices) {
+    const total = choices.reduce((s,c) => s + c.weight, 0);
+    if (!total) return choices[0];
+    let r = Math.random() * total;
+    for (const c of choices) { r -= c.weight; if (r <= 0) return c; }
+    return choices[choices.length-1];
+}
+
+// --- NPC STATES ---
+// Goals by regime:
+//   totalitarian: maximize control, security, military; suppress others; expand puppet states
+//   authoritarian: grow GDP/military, expand soft power, occasional war vs weaker
+//   democracy: grow GDP/infra/literacy; form coalitions; defensive ops only
+//   anarcho_liberal: invest in infra; spread soft power; avoid war
+// --- NPC state each turn gets a "budget" of 1-2 actions based on GDP tier
+function npcStateAct(code) {
+    const cs = G.cs[code];
+    if (!cs) return;
+    const regime = cs.regime;
+    const gdpTier = cs.gdp > 5000 ? 3 : cs.gdp > 1000 ? 2 : 1;
+    const actions = Math.min(gdpTier, 2); // 1 or 2 actions per turn
+    const others = otherCountries(code);
+    const sec = G.security[code] || 55;
+    const leg = G.legitimacy[code] || 60;
+
+    for (let i = 0; i < actions; i++) {
+        // Build a weighted list of actions this NPC would take
+        const opts = [];
+
+        // Universal: invest in infrastructure if low
+        if (cs.infra < 70) opts.push({ weight: 4, fn: () => {
+            cs.infra = Math.min(99, cs.infra + 2); recomputeCountryStats(code);
+            addLog(`[AI] ${COUNTRIES[code]?.f} ${COUNTRIES[code]?.name} invests in infrastructure.`);
+        }});
+        // Universal: boost soft power toward faction members
+        opts.push({ weight: 2, fn: () => {
+            const target = rndPick(others);
+            G.sp[code] = G.sp[code] || {};
+            G.sp[code][target] = Math.min(100, (G.sp[code][target] || 5) + 4);
+        }});
+
+        if (regime === 'totalitarian') {
+            // Lock down internet if open
+            if (cs.net > 0.2) opts.push({ weight: 3, fn: () => {
+                cs.net = Math.max(0.1, cs.net - 0.05); recomputeCountryStats(code);
+                addLog(`[AI] ${COUNTRIES[code]?.f} ${COUNTRIES[code]?.name} tightens internet controls.`);
+            }});
+            // Boost security
+            opts.push({ weight: 4, fn: () => {
+                G.security[code] = Math.min(100, sec + 5);
+            }});
+            // Puppet a weak neighbour
+            opts.push({ weight: 3, fn: () => {
+                const weak = others.filter(k => G.cs[k] && G.cs[k].military < cs.military * 0.5 && COUNTRIES[k].type === 'minor');
+                if (weak.length) {
+                    const t = rndPick(weak);
+                    G.faction[t] = code;
+                    G.sp[code][t] = Math.min(100, (G.sp[code]?.[t] || 5) + 15);
+                    addLog(`[AI] ${COUNTRIES[code]?.f} ${COUNTRIES[code]?.name} extends control over ${COUNTRIES[t]?.name}.`);
+                }
+            }});
+            // Cyber attack hostile state
+            opts.push({ weight: 2, fn: () => {
+                const hostile = others.filter(k => G.cs[k] && (G.cs[k].regime === 'democracy' || G.cs[k].regime === 'anarcho_liberal'));
+                if (hostile.length) {
+                    const t = rndPick(hostile);
+                    G.security[t] = Math.max(0, (G.security[t] || 55) - 8);
+                    G.cs[t].infra = Math.max(10, G.cs[t].infra - 1);
+                    recomputeCountryStats(t);
+                    addLog(`[AI] ${COUNTRIES[code]?.f} ${COUNTRIES[code]?.name} launches cyber attack on ${COUNTRIES[t]?.f} ${COUNTRIES[t]?.name}.`);
+                }
+            }});
+        }
+
+        if (regime === 'authoritarian') {
+            // Grow military
+            opts.push({ weight: 3, fn: () => {
+                cs.military = +(cs.military * 1.05).toFixed(1);
+            }});
+            // Info war against rivals
+            opts.push({ weight: 3, fn: () => {
+                const rivals = others.filter(k => G.cs[k]?.regime === 'democracy');
+                if (rivals.length) {
+                    const t = rndPick(rivals);
+                    G.legitimacy[t] = Math.max(0, (G.legitimacy[t] || 60) - 5);
+                    addLog(`[AI] ${COUNTRIES[code]?.f} ${COUNTRIES[code]?.name} runs info ops against ${COUNTRIES[t]?.f} ${COUNTRIES[t]?.name}.`);
+                }
+            }});
+            // Espionage
+            opts.push({ weight: 2, fn: () => {
+                const t = rndPick(others);
+                G.security[t] = Math.max(0, (G.security[t] || 55) - 6);
+            }});
+            // War vs very weak if high military
+            if (cs.military > 200) opts.push({ weight: 1, fn: () => {
+                const prey = others.filter(k => G.cs[k] && G.cs[k].military < cs.military * 0.3 && COUNTRIES[k].type === 'minor');
+                if (prey.length) resolveWar(code, rndPick(prey), false);
+            }});
+        }
+
+        if (regime === 'democracy') {
+            // Invest in literacy
+            if (cs.lit < 0.97) opts.push({ weight: 3, fn: () => {
+                cs.lit = Math.min(0.99, cs.lit + 0.01); recomputeCountryStats(code);
+            }});
+            // Boost legitimacy via coalition building (boost own legitimacy + SP)
+            opts.push({ weight: 3, fn: () => {
+                G.legitimacy[code] = Math.min(100, leg + 3);
+                const allies = others.filter(k => G.cs[k]?.regime === 'democracy');
+                allies.forEach(k => {
+                    G.sp[code] = G.sp[code] || {};
+                    G.sp[code][k] = Math.min(100, (G.sp[code][k] || 5) + 3);
+                });
+            }});
+            // Cyber defence
+            opts.push({ weight: 2, fn: () => {
+                G.security[code] = Math.min(100, sec + 6);
+            }});
+        }
+
+        if (regime === 'anarcho_liberal') {
+            // Heavy infra investment
+            opts.push({ weight: 4, fn: () => {
+                cs.infra = Math.min(99, cs.infra + 3);
+                cs.net   = Math.min(0.99, cs.net + 0.02);
+                recomputeCountryStats(code);
+            }});
+            // Spread liberal ideology via soft power
+            opts.push({ weight: 4, fn: () => {
+                others.forEach(k => {
+                    G.sp[code] = G.sp[code] || {};
+                    G.sp[code][k] = Math.min(100, (G.sp[code][k] || 5) + 2);
+                });
+            }});
+        }
+
+        if (opts.length) weightedPick(opts).fn();
+    }
+}
+
+// --- NPC CORPS ---
+// Goals: maximize revenue (expand market share in high-GDP countries; invest in infrastructure)
+// Aggressive corp (NVIDIA, Google, Meta etc.) expand harder
+function npcCorpAct(corp) {
+    if (G.playerCode === corp.name) return; // skip player
+    const shares = liveShares(corp);
+    const rev = parseFloat(corpRevenue(corp));
+    // Find highest-GDP countries where share is low — best expansion targets
+    const candidates = Object.keys(COUNTRIES)
+        .filter(k => liveC(k) && (shares[k] || 0) < 25)
+        .sort((a,b) => (liveC(b)?.gdp||0) - (liveC(a)?.gdp||0))
+        .slice(0, 5);
+    if (!candidates.length) return;
+
+    const opts = [];
+    // Grow market share in top candidate
+    opts.push({ weight: 5, fn: () => {
+        const t = candidates[0];
+        G.corpShares[corp.name][t] = Math.min(40, (G.corpShares[corp.name][t] || 0) + 1);
+    }});
+    // Invest in a random candidate's infra (boosts their GDP → boosts corp revenue)
+    opts.push({ weight: 3, fn: () => {
+        const t = rndPick(candidates);
+        if (G.cs[t]) { G.cs[t].infra = Math.min(99, G.cs[t].infra + 1); recomputeCountryStats(t); }
+        G.corpShares[corp.name][t] = Math.min(40, (G.corpShares[corp.name][t] || 0) + 1);
+    }});
+    // Occasionally move into a new market (countries with 0 share)
+    const newMarkets = Object.keys(COUNTRIES).filter(k => !(shares[k]) && liveC(k)?.gdp > 100);
+    if (newMarkets.length && rev > 50) opts.push({ weight: 2, fn: () => {
+        const t = rndPick(newMarkets);
+        G.corpShares[corp.name][t] = 1;
+        addLog(`[CORP] ${corp.ico} ${corp.name} enters ${COUNTRIES[t]?.f} ${COUNTRIES[t]?.name} market.`);
+    }});
+
+    weightedPick(opts).fn();
+}
+
+// --- NPC NON-STATE ACTORS ---
+// Goals vary by ideology:
+//   religious (catholic, islamic): spread influence, grow share in aligned countries
+//   anti-AI (greenpeace, buddhist): grow in democracies, oppose tech
+//   militant (alqaeda, wagner, hamas): grow in authoritarian/unstable, destabilize
+//   pro-AI/elite (mars, bilder): grow in major powers, boost soft power
+//   open society (opensoc): grow in authoritarian countries, boost legitimacy
+function npcNsaAct(nsa) {
+    if (G.playerCode === nsa.name) return;
+    const sizes = liveNsaSizes(nsa);
+
+    // Spread to a new country or grow in existing
+    const allCodes = Object.keys(COUNTRIES);
+    let targets = [];
+
+    if (nsa.id === 'alqaeda' || nsa.id === 'wagner' || nsa.id === 'hamas') {
+        // Prefer unstable / authoritarian / low-legitimacy countries
+        targets = allCodes.filter(k => (G.legitimacy[k]||60) < 60 || G.cs[k]?.regime === 'authoritarian' || G.cs[k]?.regime === 'totalitarian');
+        // Effects: destabilize security/legitimacy where they grow
+        const t = targets.length ? rndPick(targets) : rndPick(allCodes);
+        G.nsaSizes[nsa.id][t] = Math.min(0.4, (G.nsaSizes[nsa.id][t] || 0) + 0.005);
+        if (nsa.id === 'alqaeda' || nsa.id === 'hamas') {
+            G.security[t]   = Math.max(0, (G.security[t]   || 55) - 3);
+            G.legitimacy[t] = Math.max(0, (G.legitimacy[t] || 60) - 2);
+        }
+
+    } else if (nsa.id === 'opensoc') {
+        // Grow in authoritarian/totalitarian countries, boost their legitimacy
+        targets = allCodes.filter(k => G.cs[k]?.regime === 'authoritarian' || G.cs[k]?.regime === 'totalitarian');
+        if (targets.length) {
+            const t = rndPick(targets);
+            G.nsaSizes[nsa.id][t] = Math.min(0.3, (G.nsaSizes[nsa.id][t] || 0) + 0.008);
+            G.legitimacy[t] = Math.min(100, (G.legitimacy[t] || 60) + 2);
+            addLog(`[NSA] Open Society grows in ${COUNTRIES[t]?.f} ${COUNTRIES[t]?.name}, boosting civil legitimacy.`);
+        }
+
+    } else if (nsa.id === 'green') {
+        // Grow in democracies, penalize high-GDP countries via GDP penalty pressure
+        targets = allCodes.filter(k => G.cs[k]?.regime === 'democracy' || G.cs[k]?.regime === 'anarcho_liberal');
+        if (targets.length) {
+            const t = rndPick(targets);
+            G.nsaSizes[nsa.id][t] = Math.min(0.25, (G.nsaSizes[nsa.id][t] || 0) + 0.006);
+        }
+
+    } else if (nsa.id === 'mars' || nsa.id === 'bilder') {
+        // Grow in major high-GDP powers
+        targets = allCodes.filter(k => COUNTRIES[k].type === 'major' || (liveC(k)?.gdp||0) > 2000);
+        if (targets.length) {
+            const t = rndPick(targets);
+            G.nsaSizes[nsa.id][t] = Math.min(0.25, (G.nsaSizes[nsa.id][t] || 0) + 0.006);
+        }
+
+    } else {
+        // catholic, islamic, buddhist: grow in culturally aligned countries (use existing size as gravity)
+        const existing = Object.entries(sizes).filter(([,v]) => v > 0.01).map(([k]) => k);
+        const seed = existing.length ? rndPick(existing) : rndPick(allCodes);
+        // Spread to neighbors (same faction or same regime)
+        const seedFaction = G.faction[seed] || COUNTRIES[seed]?.faction;
+        targets = allCodes.filter(k => k !== seed && (G.faction[k] === seedFaction || G.cs[k]?.regime === G.cs[seed]?.regime));
+        const t = targets.length ? rndPick(targets) : rndPick(allCodes);
+        G.nsaSizes[nsa.id][t] = Math.min(0.3, (G.nsaSizes[nsa.id][t] || 0) + 0.004);
+    }
+}
+
+// Master NPC tick — called once per endTurn
+function npcTick() {
+    // All non-player states act
+    for (const code of Object.keys(COUNTRIES)) {
+        if (code === G.playerCode) continue;
+        if (COUNTRIES[code].type === 'haven') continue; // havens do nothing
+        npcStateAct(code);
+    }
+    // All non-player corps act
+    for (const corp of CORPS) {
+        npcCorpAct(corp);
+    }
+    // All non-player NSAs act
+    for (const nsa of NSAS) {
+        npcNsaAct(nsa);
+    }
+}
+
+function simTick() {
+    // Decay boycotts (one turn)
+    G.boycotts = {};
+    // NPC AI actions
+    npcTick();
+    // Recompute all country stats
+    for (const code of Object.keys(COUNTRIES)) recomputeCountryStats(code);
+    // Soft power driven ideology drift
+    simSoftPowerDrift();
+    // Natural recovery
+    for (const code of Object.keys(COUNTRIES)) {
+        G.security[code]   = Math.min(100, (G.security[code]   || 55) + 2);
+        G.legitimacy[code] = Math.min(100, (G.legitimacy[code] || 60) + 1);
+        if ((G.legitimacy[code] || 60) < 30)
+            G.cs[code].infra = Math.max(10, G.cs[code].infra - 1);
+    }
+}
+
+// ═══════════════════════════════════════════
 //  END TURN
 // ═══════════════════════════════════════════
 window.endTurn=function(){
     if(!document.getElementById('popup').classList.contains('off')) return;
     G.turn++;
-    const base={major:120,minor:70,tech:100,nsa:65}[G.role]||70;
-    const earned=base+G.techs.size*5;
-    G.pp+=earned;
+    // Run simulation tick (stat recompute, SP drift, recovery)
+    if(Object.keys(G.cs).length) simTick();
+    // Income
+    const earned = calcPlayerIncome() + G.techs.size * 3;
+    G.pp += earned;
+    // AGI global advance
     G.agi=Math.min(100,G.agi+Math.floor(Math.random()*3)+1);
     if(Math.random()>0.55){ G.agi=Math.min(100,G.agi+2); addLog('Major powers accelerate AI spending. AGI advances.'); }
+    // Events
     const ev=SCRIPTED_EVENTS.find(e=>e.turn===G.turn);
     if(ev) showPopup(ev);
     else if(Math.random()>0.7){
         const re=RANDOM_EVENTS[Math.floor(Math.random()*RANDOM_EVENTS.length)];
         addLog(`[${re.cat}] ${re.title} — ${re.body.slice(0,60)}…`,'hi');
     }
-    addLog(`Turn ${G.turn} — +${earned} PP earned.`);
+    const incBreak = G.expenses > 0 ? ` (income ${G.income} − exp ${G.expenses})` : '';
+    addLog(`Turn ${G.turn} — +${earned} PP earned${incBreak}.`);
     updateHUD();
+    refreshCountryPanel(G.selectedCode);
+    if(activeTab==='domestic') renderDomestic();
     if(G.agi>=100) triggerEndgame();
 };
 
@@ -490,36 +1165,57 @@ window.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 function renderDomestic() {
     const el = document.getElementById('dom-body');
-    if (!G.role) { el.innerHTML = '<p style="color:#3a5a6a;padding:32px">Start the simulation first.</p>'; return; }
-    const c = G.playerCode ? COUNTRIES[G.playerCode] : null;
-    const gdp = c ? c.gdp : '—';
-    const mil = c ? c.military : '—';
-    const factionC = c && c.faction ? COUNTRIES[c.faction] : null;
-    const techCount = G.techs ? G.techs.size || G.techs.length || 0 : 0;
+    if (!G.role) { el.innerHTML = '<p class="dom-empty">Start the simulation first.</p>'; return; }
+    const c   = G.playerCode ? COUNTRIES[G.playerCode] : null;
+    const cs  = G.cs[G.playerCode] || c;
+    const sec = G.security[G.playerCode];
+    const leg = G.legitimacy[G.playerCode];
+    const liveFaction = G.playerCode ? (G.faction[G.playerCode] ?? c?.faction) : null;
+    const factionC = liveFaction ? COUNTRIES[liveFaction] : null;
+    const techCount = G.techs.size;
+    const mults = G.playerCode ? calcIdeologyMultipliers(G.playerCode) : {};
+    const spTop = G.playerCode ? Object.entries(G.sp[G.playerCode] || {})
+        .sort((a,b)=>b[1]-a[1]).slice(0,3)
+        .map(([k,v])=>`${COUNTRIES[k]?.f??k} ${Math.round(v)}`)
+        .join(' · ') : '—';
+
     el.innerHTML = `
         <div class="dom-hdr">
             <div class="dom-flag">${c ? c.f : '🔷'}</div>
             <div>
                 <div class="dom-name">${G.roleName}</div>
                 <span class="regime-pill rp-${G.regime}">${G.regime.replace('_',' ')}</span>
-                ${factionC ? `<span style="margin-left:10px;font-size:0.72rem;color:#3a5a6a">Aligned to ${factionC.f} ${factionC.name}</span>` : ''}
+                ${factionC ? `<span class="dom-faction">Aligned to ${factionC.f} ${factionC.name}</span>` : ''}
             </div>
         </div>
-        <div class="dom-section-title">STATISTICS</div>
+        <div class="dom-section-title">ECONOMY &amp; POWER</div>
         <div class="dom-stats">
             <div class="dom-stat"><span class="dom-k">POWER POINTS</span><span class="dom-v">${G.pp}</span></div>
+            <div class="dom-stat"><span class="dom-k">INCOME / TURN</span><span class="dom-v dom-pos">+${G.income||'—'}</span></div>
+            <div class="dom-stat"><span class="dom-k">EXPENSES / TURN</span><span class="dom-v dom-neg">${G.expenses ? '−'+G.expenses : '—'}</span></div>
             <div class="dom-stat"><span class="dom-k">AGI PROGRESS</span><span class="dom-v">${G.agi}%</span></div>
             <div class="dom-stat"><span class="dom-k">TECHS RESEARCHED</span><span class="dom-v">${techCount}</span></div>
             <div class="dom-stat"><span class="dom-k">TURN / YEAR</span><span class="dom-v">${G.turn} / ${2024+G.turn}</span></div>
-            ${c ? `
-            <div class="dom-stat"><span class="dom-k">GDP</span><span class="dom-v">${gdp}</span></div>
-            <div class="dom-stat"><span class="dom-k">MILITARY</span><span class="dom-v">${mil}</span></div>
-            <div class="dom-stat"><span class="dom-k">POPULATION</span><span class="dom-v">${c.pop}M</span></div>
-            <div class="dom-stat"><span class="dom-k">INFRASTRUCTURE</span><span class="dom-v">${c.infra}%</span></div>
-            <div class="dom-stat"><span class="dom-k">LITERACY</span><span class="dom-v">${Math.round(c.lit*100)}%</span></div>
-            <div class="dom-stat"><span class="dom-k">INTERNET ACCESS</span><span class="dom-v">${Math.round(c.net*100)}%</span></div>
-            ` : ''}
         </div>
+        ${cs ? `
+        <div class="dom-section-title">NATIONAL STATS</div>
+        <div class="dom-stats">
+            <div class="dom-stat"><span class="dom-k">GDP INDEX</span><span class="dom-v">${cs.gdp?.toLocaleString()??'—'}</span></div>
+            <div class="dom-stat"><span class="dom-k">MILITARY</span><span class="dom-v">${cs.military?.toLocaleString()??'—'}</span></div>
+            <div class="dom-stat"><span class="dom-k">SECURITY</span><span class="dom-v">${sec??'—'}/100</span></div>
+            <div class="dom-stat"><span class="dom-k">LEGITIMACY</span><span class="dom-v">${leg??'—'}/100</span></div>
+            <div class="dom-stat"><span class="dom-k">POPULATION</span><span class="dom-v">${cs.pop}M</span></div>
+            <div class="dom-stat"><span class="dom-k">INFRASTRUCTURE</span><span class="dom-v">${cs.infra}%</span></div>
+            <div class="dom-stat"><span class="dom-k">LITERACY</span><span class="dom-v">${Math.round(cs.lit*100)}%</span></div>
+            <div class="dom-stat"><span class="dom-k">INTERNET ACCESS</span><span class="dom-v">${Math.round(cs.net*100)}%</span></div>
+        </div>
+        <div class="dom-section-title">INFLUENCE &amp; IDEOLOGY</div>
+        <div class="dom-stats">
+            <div class="dom-stat dom-wide"><span class="dom-k">TOP SOFT POWER TARGETS</span><span class="dom-v">${spTop||'—'}</span></div>
+            ${mults.social_cost ? `<div class="dom-stat"><span class="dom-k">SOC. BENEFIT MODIFIER</span><span class="dom-v">${mults.social_cost>0?'+':''}${(mults.social_cost*100).toFixed(0)}%</span></div>` : ''}
+            ${mults.mil_cost    ? `<div class="dom-stat"><span class="dom-k">MIL. COST MODIFIER</span><span class="dom-v">${mults.mil_cost>0?'+':''}${(mults.mil_cost*100).toFixed(0)}%</span></div>` : ''}
+            ${mults.soft_power  ? `<div class="dom-stat"><span class="dom-k">SOFT POWER BONUS</span><span class="dom-v">+${(mults.soft_power*100).toFixed(0)}%</span></div>` : ''}
+        </div>` : ''}
     `;
 }
 
@@ -578,7 +1274,8 @@ window.showLedgerTab = function(sub) {
         const s = ldgSort.countries;
         const strCols = { name:'name', regime:'regime' };
         const numKeys = {gdp:'gdp',mil:'military',pop:'pop',infra:'infra',lit:'lit',net:'net'};
-        const rows = Object.values(COUNTRIES)
+        const rows = Object.keys(COUNTRIES)
+            .map(code => liveC(code))
             .sort((a,b) => {
                 if (strCols[s.col]) return s.dir==='asc' ? a[strCols[s.col]].localeCompare(b[strCols[s.col]]) : b[strCols[s.col]].localeCompare(a[strCols[s.col]]);
                 const key = numKeys[s.col] || 'gdp';
@@ -614,18 +1311,18 @@ window.showLedgerTab = function(sub) {
         data.sort((a,b) => {
             if (s.col==='name')  return s.dir==='asc' ? a.corp.name.localeCompare(b.corp.name)  : b.corp.name.localeCompare(a.corp.name);
             if (s.col==='sector')return s.dir==='asc' ? a.corp.type.localeCompare(b.corp.type)  : b.corp.type.localeCompare(a.corp.type);
-            if (s.col==='mkts')  return s.dir==='asc' ? Object.keys(a.corp.shares).length - Object.keys(b.corp.shares).length : Object.keys(b.corp.shares).length - Object.keys(a.corp.shares).length;
+            if (s.col==='mkts')  return s.dir==='asc' ? Object.keys(liveShares(a.corp)).length - Object.keys(liveShares(b.corp)).length : Object.keys(liveShares(b.corp)).length - Object.keys(liveShares(a.corp)).length;
             return s.dir==='asc' ? a.rev-b.rev : b.rev-a.rev;
         });
         const rows = data.map(({corp, rev}) => {
             const you = G.playerCode === corp.name;
-            const top = Object.entries(corp.shares).sort((a,b)=>b[1]-a[1])[0];
+            const top = Object.entries(liveShares(corp)).sort((a,b)=>b[1]-a[1])[0];
             return `<tr class="${you?'ldg-you':''} ldg-clickable" onclick="showLedgerDetail('corp','${corp.id}')">
                 <td style="font-size:1.3rem">${corp.ico}</td>
                 <td>${corp.name}${you?' <span class="ldg-you-tag">▶ YOU</span>':''}</td>
                 <td class="ldg-dim">${corp.type}</td>
                 <td class="ldg-num">${rev.toFixed(1)}</td>
-                <td class="ldg-num">${Object.keys(corp.shares).length}</td>
+                <td class="ldg-num">${Object.keys(liveShares(corp)).length}</td>
                 <td class="ldg-dim">${top ? (COUNTRIES[top[0]]?.f||top[0])+' '+top[1]+'%' : '—'}</td>
             </tr>`;
         }).join('');
@@ -646,7 +1343,7 @@ window.showLedgerTab = function(sub) {
         });
         const rows = data.map(({nsa, eco}) => {
             const you = G.playerCode === nsa.name;
-            const top = Object.entries(nsa.sizes).sort((a,b)=>b[1]-a[1])[0];
+            const top = Object.entries(liveNsaSizes(nsa)).sort((a,b)=>b[1]-a[1])[0];
             return `<tr class="${you?'ldg-you':''} ldg-clickable" onclick="showLedgerDetail('nsa','${nsa.id}')">
                 <td style="font-size:1.3rem">${nsa.ico}</td>
                 <td>${nsa.name}${you?' <span class="ldg-you-tag">▶ YOU</span>':''}</td>
@@ -669,6 +1366,34 @@ window.showLedgerDetail = function(type, id) {
     renderLedgerDetail();
 };
 
+// Build action buttons for ledger detail panel, targeting a given country/corp/nsa id
+function ldgActionButtons(targetCode) {
+    if (!G.role || !G.playerCode) return '';
+    const isSelf = targetCode === G.playerCode;
+    const acts = ACTIONS[G.regime] || [];
+    const relevant = isSelf ? acts.filter(a => a.t === 'self') : acts.filter(a => a.t === 'country');
+    const selfActs = isSelf ? [] : acts.filter(a => a.t === 'self');
+    if (!relevant.length && !selfActs.length) return '';
+    const btn = (a, tgt) => {
+        const ok = G.pp >= a.cost;
+        return `<button class="ldg-act-btn${ok ? '' : ' cant'}" ${ok ? `onclick="ldgDoAction('${a.id}','${tgt}')"` : ''} title="${a.l}">
+            <span class="ldg-act-lbl">${a.l}</span><span class="ldg-act-cost">${a.cost} PP</span>
+        </button>`;
+    };
+    return `<div class="ldg-actions">
+        <div class="ldg-act-hdr">${isSelf ? 'YOUR ACTIONS' : 'ACTIONS'}</div>
+        <div class="ldg-act-row">
+            ${relevant.map(a => btn(a, targetCode)).join('')}
+            ${selfActs.map(a => btn(a, G.playerCode)).join('')}
+        </div>
+    </div>`;
+}
+
+window.ldgDoAction = function(actId, targetCode) {
+    window.doAction(actId, targetCode);
+    renderLedgerDetail();
+};
+
 function renderLedgerDetail() {
     document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById('lst-' + ledgerSub);
@@ -679,97 +1404,95 @@ function renderLedgerDetail() {
     const back = `<button class="ldg-back" onclick="showLedgerTab('${ledgerSub}')">← BACK</button>`;
 
     if (ledgerDetail.type === 'country') {
-        const c = COUNTRIES[ledgerDetail.id];
-        const fC = c.faction ? COUNTRIES[c.faction] : null;
+        const c = liveC(ledgerDetail.id);
+        const fC = c.faction ? liveC(c.faction) : null;
+        const sec = G.security[c.code]  != null ? G.security[c.code]  : '—';
+        const leg = G.legitimacy[c.code]!= null ? G.legitimacy[c.code]: '—';
 
-        // --- ECONOMIC STRUCTURE: major corps + government + minor corps ---
-        const allEcon = CORPS.filter(corp => corp.shares[c.code])
-            .map(corp => ({ ico: corp.ico, name: corp.name, type: corp.type, share: corp.shares[c.code], contrib: c.gdp * corp.shares[c.code] / 100 }))
-            .sort((a,b) => b.share - a.share);
+        const allEcon = CORPS
+            .filter(corp => liveShares(corp)[c.code])
+            .map(corp => {
+                const sh = liveShares(corp)[c.code];
+                return { ico: corp.ico, name: corp.name, type: corp.type, share: sh, contrib: c.gdp * sh / 100 };
+            })
+            .sort((a,b) => b.contrib - a.contrib);
         const econRows = allEcon.map(({ico,name,type,share,contrib}) => `<tr>
-                <td style="font-size:1.2rem">${ico}</td>
-                <td>${name}</td><td class="ldg-dim">${type}</td>
-                <td class="ldg-num">${share}%</td>
-                <td class="ldg-num">${typeof contrib === 'number' ? contrib.toFixed(1) : contrib}</td>
-                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${share}%"></div></div></td>
-            </tr>`).join('');
+            <td style="font-size:1.2rem">${ico}</td>
+            <td>${name}</td><td class="ldg-dim">${type}</td>
+            <td class="ldg-num">${typeof share === 'number' ? share.toFixed(1) : share}%</td>
+            <td class="ldg-num">${contrib.toFixed(1)}</td>
+            <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${Math.min(100,share)}%"></div></div></td>
+        </tr>`).join('');
 
-        // --- IDEOLOGICAL SPECTRUM: NSAs + political factions (full 100%) ---
-        const totalNsaShare = NSAS.reduce((s, nsa) => s + (nsa.sizes[c.code] || 0), 0);
+        const totalNsaShare = NSAS.reduce((s, nsa) => s + (liveNsaSizes(nsa)[c.code] || 0), 0);
         const totalPolShare = POLITY_FACTIONS.reduce((s, f) => s + (f.sizes[c.code] || 0), 0);
         const unaffiliated = Math.max(0, 1 - totalNsaShare - totalPolShare);
-
         const mkRow = (ico, name, type, size, gdp, dimmed=false) => `<tr${dimmed?' class="ldg-dim"':''}>
-                <td style="font-size:1.2rem">${ico}</td>
-                <td>${name}</td><td class="ldg-dim">${type}</td>
-                <td class="ldg-num">${Math.round(size*100)}%</td>
-                <td class="ldg-num">${(0.1 * size * gdp).toFixed(1)}</td>
-                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${(size*100).toFixed(1)}%${dimmed?';opacity:0.35':''}"></div></div></td>
-            </tr>`;
-
-        const nsaRows = NSAS
-            .map(n => ({ n, size: n.sizes[c.code] || 0 }))
-            .sort((a,b) => b.size - a.size)
-            .map(({n, size}) => mkRow(n.ico, n.name, n.type, size, c.gdp))
-            .join('');
-
-        const polRows = POLITY_FACTIONS
-            .map(f => ({ f, size: f.sizes[c.code] || 0 }))
-            .sort((a,b) => b.size - a.size)
-            .map(({f, size}) => mkRow(f.ico, f.name, f.type, size, c.gdp))
-            .join('');
-
-        const sepRow = `<tr><td colspan="6" style="padding:4px 8px;font-size:0.72rem;letter-spacing:0.08em;color:#3a5a6a;border-top:1px solid #1a3a4a">POLITICAL FACTIONS</td></tr>`;
-        const nsaRows_full = nsaRows + sepRow + polRows
-            + (unaffiliated > 0.005 ? mkRow('👤','Unaffiliated','—', unaffiliated, c.gdp, true) : '');
+            <td style="font-size:1.2rem">${ico}</td><td>${name}</td><td class="ldg-dim">${type}</td>
+            <td class="ldg-num">${Math.round(size*100)}%</td>
+            <td class="ldg-num">${(0.1*size*gdp).toFixed(1)}</td>
+            <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${(size*100).toFixed(1)}%${dimmed?';opacity:0.35':''}"></div></div></td>
+        </tr>`;
+        const nsaRows = NSAS.map(n=>({n,size:liveNsaSizes(n)[c.code]||0})).sort((a,b)=>b.size-a.size).map(({n,size})=>mkRow(n.ico,n.name,n.type,size,c.gdp)).join('');
+        const polRows = POLITY_FACTIONS.map(f=>({f,size:f.sizes[c.code]||0})).sort((a,b)=>b.size-a.size).map(({f,size})=>mkRow(f.ico,f.name,f.type,size,c.gdp)).join('');
+        const sepRow = `<tr><td colspan="6" class="ldg-sep-row">POLITICAL FACTIONS</td></tr>`;
+        const nsaRows_full = nsaRows + sepRow + polRows + (unaffiliated>0.005 ? mkRow('👤','Unaffiliated','—',unaffiliated,c.gdp,true) : '');
 
         el.innerHTML = `${back}
-        <div class="ldg-det-hdr">
-            <span style="font-size:2.5rem">${c.f}</span>
-            <div>
-                <div class="ldg-det-name">${c.name}</div>
-                <span class="regime-pill rp-${c.regime}">${c.regime.replace('_',' ')}</span>
-                ${fC ? `<span class="ldg-dim" style="margin-left:10px">aligned to ${fC.f} ${fC.name}</span>` : ''}
+        <div class="ldg-det-layout">
+          <div class="ldg-det-main">
+            <div class="ldg-det-hdr">
+                <span class="ldg-det-flag">${c.f}</span>
+                <div>
+                    <div class="ldg-det-name">${c.name}</div>
+                    <span class="regime-pill rp-${c.regime}">${c.regime.replace('_',' ')}</span>
+                    ${fC ? `<span class="ldg-dim" style="margin-left:10px">→ ${fC.f} ${fC.name}</span>` : ''}
+                </div>
             </div>
-        </div>
-        <div class="ldg-det-stats">
-            ${[['GDP',c.gdp],['Military',c.military],['Population',c.pop+'M'],['Infrastructure',c.infra+'%'],['Literacy',Math.round(c.lit*100)+'%'],['Internet',Math.round(c.net*100)+'%']].map(([k,v])=>`<div class="dom-stat"><span class="dom-k">${k}</span><span class="dom-v">${v}</span></div>`).join('')}
-        </div>
-        <div class="ldg-det-section">ECONOMIC STRUCTURE</div>
-        <table class="ldg-table"><thead><tr><th></th><th>ACTOR</th><th>SECTOR</th><th class="ldg-num">GDP SHARE</th><th class="ldg-num">CONTRIBUTION</th><th style="width:140px">SHARE</th></tr></thead><tbody>${econRows}</tbody></table>
-        <p class="ldg-note">Government & Minor Corps shares are stored per country and editable in economy_editor.html.</p>
-        <div class="ldg-det-section" style="margin-top:20px">IDEOLOGICAL SPECTRUM</div>
-        <table class="ldg-table"><thead><tr><th></th><th>ORGANIZATION / FACTION</th><th>TYPE</th><th class="ldg-num">POP. SHARE</th><th class="ldg-num">ECO-WEIGHT</th><th style="width:140px">SHARE</th></tr></thead><tbody>${nsaRows_full}</tbody></table>
-        <p class="ldg-note">Eco-weight = 0.1 × pop. share × GDP. Political factions subdivide the secular remainder.</p>`;
+            <div class="ldg-det-stats">
+                ${[['GDP',c.gdp],['Military',c.military],['Pop',c.pop+'M'],['Infra',c.infra+'%'],['Literacy',Math.round(c.lit*100)+'%'],['Internet',Math.round(c.net*100)+'%'],['Security',sec+'/100'],['Legitimacy',leg+'/100']].map(([k,v])=>`<div class="dom-stat"><span class="dom-k">${k}</span><span class="dom-v">${v}</span></div>`).join('')}
+            </div>
+            <div class="ldg-det-section">ECONOMIC STRUCTURE</div>
+            <table class="ldg-table"><thead><tr><th></th><th>ACTOR</th><th>SECTOR</th><th class="ldg-num">SHARE</th><th class="ldg-num">GDP CONTRIB</th><th>BAR</th></tr></thead><tbody>${econRows}</tbody></table>
+            <div class="ldg-det-section" style="margin-top:16px">IDEOLOGICAL SPECTRUM</div>
+            <table class="ldg-table"><thead><tr><th></th><th>ORGANIZATION / FACTION</th><th>TYPE</th><th class="ldg-num">POP %</th><th class="ldg-num">ECO-WEIGHT</th><th>BAR</th></tr></thead><tbody>${nsaRows_full}</tbody></table>
+          </div>
+          <div class="ldg-det-side">${ldgActionButtons(c.code)}</div>
+        </div>`;
 
     } else if (ledgerDetail.type === 'corp') {
         const corp = CORPS.find(c => c.id === ledgerDetail.id);
+        const shares = liveShares(corp);
         const total = parseFloat(corpRevenue(corp));
-        const rows = Object.entries(corp.shares)
-            .map(([code, share]) => ({ c: COUNTRIES[code], share, contrib: COUNTRIES[code] ? COUNTRIES[code].gdp * share / 100 : 0 }))
+        const rows = Object.entries(shares)
+            .map(([code, share]) => { const lc = liveC(code); return { c: lc, share, contrib: lc ? lc.gdp * share / 100 : 0 }; })
             .filter(x => x.c)
             .sort((a,b) => b.contrib - a.contrib)
             .map(({c,share,contrib}) => `<tr>
                 <td style="font-size:1.2rem">${c.f}</td>
                 <td>${c.name}</td>
-                <td class="ldg-num">${share}%</td>
+                <td class="ldg-num">${typeof share==='number'?share.toFixed(1):share}%</td>
                 <td class="ldg-num">${contrib.toFixed(1)}</td>
-                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${Math.min(100,contrib/total*100).toFixed(1)}%"></div></div></td>
+                <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${total>0?Math.min(100,contrib/total*100).toFixed(1):0}%"></div></div></td>
             </tr>`).join('');
         el.innerHTML = `${back}
-        <div class="ldg-det-hdr">
-            <span style="font-size:2.5rem">${corp.ico}</span>
-            <div><div class="ldg-det-name">${corp.name}</div><span class="ldg-dim">${corp.type} · Total revenue: ${total.toFixed(1)}</span></div>
-        </div>
-        <div class="ldg-det-section">MARKET PRESENCE</div>
-        <table class="ldg-table"><thead><tr><th></th><th>COUNTRY</th><th class="ldg-num">GDP SHARE</th><th class="ldg-num">REVENUE</th><th style="width:160px">SHARE OF TOTAL</th></tr></thead><tbody>${rows}</tbody></table>
-        <p class="ldg-note">Revenue = country GDP × market share%</p>`;
+        <div class="ldg-det-layout">
+          <div class="ldg-det-main">
+            <div class="ldg-det-hdr">
+                <span class="ldg-det-flag">${corp.ico}</span>
+                <div><div class="ldg-det-name">${corp.name}</div><span class="ldg-dim">${corp.type} · Revenue: ${total.toFixed(1)}</span></div>
+            </div>
+            <div class="ldg-det-section">MARKET PRESENCE</div>
+            <table class="ldg-table"><thead><tr><th></th><th>COUNTRY</th><th class="ldg-num">MARKET SHARE</th><th class="ldg-num">REVENUE</th><th>BAR</th></tr></thead><tbody>${rows}</tbody></table>
+          </div>
+          <div class="ldg-det-side">${ldgActionButtons(corp.name)}</div>
+        </div>`;
 
     } else {
         const nsa = NSAS.find(n => n.id === ledgerDetail.id);
         const total = parseFloat(nsaEcoSize(nsa));
-        const rows = Object.entries(nsa.sizes)
-            .map(([code, size]) => ({ c: COUNTRIES[code], size, contrib: COUNTRIES[code] ? 0.1 * size * COUNTRIES[code].gdp : 0 }))
+        const rows = Object.entries(liveNsaSizes(nsa))
+            .map(([code, size]) => { const lc = liveC(code); return { c: lc, size, contrib: lc ? 0.1*size*lc.gdp : 0 }; })
             .filter(x => x.c)
             .sort((a,b) => b.contrib - a.contrib)
             .map(({c,size,contrib}) => `<tr>
@@ -780,13 +1503,17 @@ function renderLedgerDetail() {
                 <td><div class="ldg-bar"><div class="ldg-bar-fill" style="width:${total>0?Math.min(100,contrib/total*100).toFixed(1):0}%"></div></div></td>
             </tr>`).join('');
         el.innerHTML = `${back}
-        <div class="ldg-det-hdr">
-            <span style="font-size:2.5rem">${nsa.ico}</span>
-            <div><div class="ldg-det-name">${nsa.name}</div><span class="ldg-dim">${nsa.type} · Total eco-size: ${total.toFixed(1)}</span></div>
-        </div>
-        <div class="ldg-det-section">COUNTRY PRESENCE</div>
-        <table class="ldg-table"><thead><tr><th></th><th>COUNTRY</th><th class="ldg-num">POP. SHARE</th><th class="ldg-num">ECO-WEIGHT</th><th style="width:160px">SHARE OF TOTAL</th></tr></thead><tbody>${rows}</tbody></table>
-        <p class="ldg-note">Eco-weight = 0.1 × pop. share × country GDP</p>`;
+        <div class="ldg-det-layout">
+          <div class="ldg-det-main">
+            <div class="ldg-det-hdr">
+                <span class="ldg-det-flag">${nsa.ico}</span>
+                <div><div class="ldg-det-name">${nsa.name}</div><span class="ldg-dim">${nsa.type} · Eco-size: ${total.toFixed(1)}</span></div>
+            </div>
+            <div class="ldg-det-section">COUNTRY PRESENCE</div>
+            <table class="ldg-table"><thead><tr><th></th><th>COUNTRY</th><th class="ldg-num">POP SHARE</th><th class="ldg-num">ECO-WEIGHT</th><th>BAR</th></tr></thead><tbody>${rows}</tbody></table>
+          </div>
+          <div class="ldg-det-side">${ldgActionButtons(nsa.name)}</div>
+        </div>`;
     }
 }
 

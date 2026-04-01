@@ -71,7 +71,7 @@
 # countries
 
 ## attributes: each country has:
-- soft power projection in each other country
+- soft power projection in each other country: causing ideological drift to the original country.
 - a trade size with each other country (which is the sum of the trade size of all the companies in it with that country)
 - infrastruction level - a multiplier of the productivity of all the companies in it, and also a multiplier of the cost of security.
 - literacy level: top 1% of the gaussian distribution is the tech elite, who contribute to tech tree. the rest is a multiplier of the productivity of all the companies in it.
@@ -225,3 +225,82 @@ big tech CEO
 
 the parties 
 offensive war: reduce
+
+
+
+## Tech Tree Effects → Game Stats
+
+Each tech in the tree produces five effect values per polity type: **cap** (capability), **leg** (legitimacy), **ctrl** (control), **econ** (economic), **mil** (military). When a tech is researched, these numbers translate into concrete stat changes depending on who researched it.
+
+### For States (major & minor country leaders)
+
+| Effect | Stat changed | How |
+| :--- | :--- | :--- |
+| **cap** | AGI progress | +cap × 0.5% to global AGI progress bar |
+| **leg** | Legitimacy | +leg directly to the country's legitimacy score (0–100). Negative leg erodes legitimacy. |
+| **ctrl** | Security | +ctrl × 2 to the country's security rating. High ctrl also slows ideological drift from soft power. |
+| **econ** | GDP multiplier | +econ × 1% permanent GDP buff (stacks with infrastructure and literacy). |
+| **mil** | Military power | +mil × 3% permanent military multiplier. |
+
+Legitimacy below 30 causes infrastructure decay (–1/turn). Security below 20 makes the country vulnerable to coups, regime change, and NSA infiltration.
+
+### For Corporations (Big Tech CEOs)
+
+| Effect | Stat changed | How |
+| :--- | :--- | :--- |
+| **cap** | R&D efficiency | Reduces the PP cost of future techs by cap × 2%. |
+| **leg** | Public trust | +leg improves the corp's ability to enter new markets without boycott risk. Negative leg increases boycott probability. |
+| **ctrl** | Market lock-in | +ctrl × 0.5% market share growth in all countries where the corp operates. |
+| **econ** | Revenue multiplier | +econ × 2% permanent revenue buff across all markets. |
+| **mil** | Private military | +mil × 2 to the corp's private military capacity (if formed). Without a private army, mil points accumulate as latent capacity. |
+
+Corps have income (revenue = sum of GDP × market share across countries) and expenses (R&D costs, market expansion, private army maintenance). Net PP per turn = base income + revenue × 0.02 − expenses.
+
+### For Non-State Actors
+
+| Effect | Stat changed | How |
+| :--- | :--- | :--- |
+| **cap** | Operational reach | +cap expands the number of countries the NSA can operate in simultaneously. |
+| **leg** | Ideological credibility | +leg × 0.5% follower growth rate in all countries where the NSA has presence. Negative leg causes follower attrition. |
+| **ctrl** | Infiltration depth | +ctrl increases the NSA's influence-per-follower, making each percentage of population share more impactful on ideology drift. |
+| **econ** | Funding efficiency | +econ × 1% to the NSA's income from follower-weighted GDP. |
+| **mil** | Armed capacity | +mil × 2 to the NSA's private army (if formed). Armed NSAs can launch cyber attacks, info warfare, and even war. |
+
+NSAs have income (0.1 × sum of follower share × country GDP across all countries) and expenses (ideological campaigns, armed operations). Follower share is the fraction of a country's population that follows the NSA.
+
+### Income and Expenses Summary
+
+**States:**
+- Income: base PP (100 major / 60 minor) + GDP ÷ 100 per turn
+- Expenses: social benefits (modified by ideology share), military maintenance (modified by regime type), surveillance costs
+
+**Corporations:**
+- Income: base PP (80) + total revenue × 0.02
+- Expenses: R&D, market expansion, private army upkeep
+
+**Non-State Actors:**
+- Income: base PP (50) + eco-size × 0.5
+- Expenses: ideological campaigns, armed operations
+
+**Havens** (Singapore, Vanuatu): no government expenses, no military, all investment done by corps operating within them.
+
+## ideology buff and debuff for states
+
+| | GDP | social benefit cost for same effect | military investment | military investment cost for same effect | surveillance cost | soft power projection |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| - totalitarian | | 25% | | 50% | | |
+| - authoritarian | | 35% | | 100% | | |
+| - democracy | | 20% | | | | 150% |
+| - anarcho-liberal | | -10% | | | | 200% |
+| - catholic church - | | -30% | | | | 50% |
+| - buddhist - | | -50% | -70% | | | 200% |
+| - Islamic Cooperation Organization - | | -20% | | | | |
+| - green peace - | -500% | | | | | 400% |
+| - the Mars Society - | | | | | | 400% |
+| - al qaeda - | | | | -600% | 1000% | |
+| - wagner group - | | | | -600% | | |
+| - Open Society Foundations (Soros) - | | | | | | 800% |
+| - Illuminati - | | | | | | 600% |
+
+**The Effect is to be multiplied by the share**
+
