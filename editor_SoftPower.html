@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soft Power Designer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="overflow:hidden;">
+<div style="display:flex;flex-direction:column;height:100vh;padding:4px 8px;box-sizing:border-box;">
+    <div class="ed-toolbar" style="flex-shrink:0;">
+        <span class="ed-title">Soft Power Projection Designer</span>
+        <span class="ed-status" id="status">Loading…</span>
+        <button class="btn" id="btn-load">Open JSON</button>
+        <button class="btn btn-green" id="btn-save">Save JSON</button>
+    </div>
+    <div class="ed-wrap" style="flex:1;overflow:auto;">
+        <table class="ed-table" id="tbl"></table>
+    </div>
+</div>
+
+<script type="module">
+let fileHandle = null;
+let countries = [];
+let data = {};
+let sortKey = null;   // 'country' | column index (number) | 'rowsum' | 'row:CODE' (sort columns by a row's values)
+let sortDir = 1;
+
+async function loadFromPath() {
+    try {
+        const r = await fetch('./data/softpower.json');
+        const json = await r.json();
+        ingest(json);
+        document.getElementById('status').textContent = 'Loaded from data/softpower.json';
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) {
+        document.getElementById('status').textContent = 'Could not auto-load — use Open JSON';
+        document.getElementById('status').className = 'ed-status err';
+    }
+}
+
+function ingest(json) {
+    countries = json.countries;
+    data = {};
+    for (const [k, v] of Object.entries(json.data)) {
+        if (k !== '_comment') data[k] = [...v];
+    }
+    render();
+}
+
+function toJson() {
+    const out = { _comment: 'Soft power projection matrix. Each COLUMN (target) sums to 100%. Value = % of target cultural consumption from source. Row=projector, Col=target.', countries, data: {} };
+    for (const [k, v] of Object.entries(data)) out.data[k] = v;
+    return JSON.stringify(out, null, 2)
+        .replace(/\[\n\s+(-?[\d.]+(?:,\n\s+-?[\d.]+)*)\n\s+\]/g,
+            (_, nums) => '[' + nums.replace(/\s*\n\s*/g, ' ') + ']');
+}
+
+function rowSum(code) {
+    return Math.round(data[code].reduce((s, v) => s + v, 0) * 10) / 10;
+}
+
+function colSum(colIdx) {
+    return Math.round(Object.values(data).reduce((s, row) => s + row[colIdx], 0) * 10) / 10;
+}
+
+function sortedCountries() {
+    const keys = Object.keys(data);
+    if (sortKey === null) return keys;
+    // Sort columns by a specific row's values
+    if (typeof sortKey === 'string' && sortKey.startsWith('row:')) {
+        return keys; // row sorting doesn't change row order
+    }
+    return [...keys].sort((a, b) => {
+        let va, vb;
+        if (sortKey === 'country') { va = a; vb = b; return sortDir * va.localeCompare(vb); }
+        if (sortKey === 'rowsum') { va = rowSum(a); vb = rowSum(b); }
+        else { const ci = +sortKey; va = data[a][ci]; vb = data[b][ci]; }
+        return sortDir * (va - vb);
+    });
+}
+
+function sortedColumnIndices() {
+    const indices = countries.map((_, i) => i);
+    if (typeof sortKey === 'string' && sortKey.startsWith('row:')) {
+        const rowCode = sortKey.slice(4);
+        const row = data[rowCode];
+        if (row) {
+            indices.sort((a, b) => sortDir * (row[a] - row[b]));
+        }
+    }
+    return indices;
+}
+
+function arrow(key) {
+    if (sortKey !== key) return '<span style="color:#2a3a4a;margin-left:2px;">⇅</span>';
+    return sortDir === 1
+        ? '<span style="color:#4a9eff;margin-left:2px;">↓</span>'
+        : '<span style="color:#4a9eff;margin-left:2px;">↑</span>';
+}
+
+function cellColor(v, isSelf) {
+    if (isSelf) return 'background:rgba(255,200,50,0.15)';
+    if (v === 0) return 'background:rgba(0,0,0,0.15)';
+    if (v >= 10) return 'background:rgba(74,200,122,0.25)';
+    if (v >= 5) return 'background:rgba(74,158,255,0.2)';
+    if (v >= 2) return 'background:rgba(74,158,255,0.08)';
+    return '';
+}
+
+function render() {
+    const tbl = document.getElementById('tbl');
+    const thStyle = 'cursor:pointer;user-select:none;min-width:38px;max-width:38px;white-space:nowrap;font-size:0.62rem;';
+    const stickyLeft = 'position:sticky;left:0;z-index:1;background:#0a1520;';
+    const colOrder = sortedColumnIndices();
+
+    let html = '<thead><tr>';
+    html += `<th class="ed-th-country" data-sort="country" style="cursor:pointer;user-select:none;position:sticky;left:0;z-index:2;background:#0a1520;">FROM \\ TO${arrow('country')}</th>`;
+    for (const i of colOrder) {
+        const c = countries[i];
+        html += `<th data-sort="${i}" style="${thStyle}" title="${c}">${c}${arrow(''+i)}</th>`;
+    }
+    html += `<th data-sort="rowsum" style="cursor:pointer;user-select:none;">Σ out${arrow('rowsum')}</th>`;
+    html += '</tr></thead><tbody>';
+
+    for (const code of sortedCountries()) {
+        const row = data[code];
+        const ci = countries.indexOf(code);
+        const sum = rowSum(code);
+        const sumOk = Math.abs(sum - 100) < 0.5;
+        html += `<tr data-code="${code}">`;
+        html += `<td class="ed-td-label" data-rowsort="${code}" style="${stickyLeft}cursor:pointer;user-select:none;" title="Click to sort columns by ${code}'s values">${code}${arrow('row:'+code)}</td>`;
+        for (const i of colOrder) {
+            const v = row[i];
+            const isSelf = i === ci;
+            html += `<td style="${cellColor(v, isSelf)}"><input type="number" class="ed-num ${v===0&&!isSelf?'zero':''}" value="${v}" min="0" max="100" step="0.1" data-code="${code}" data-col="${i}" ${isSelf?'style="font-weight:bold;color:#e8c840;"':''}></td>`;
+        }
+        html += `<td class="ed-sum" id="sum-${code}">${sum}</td>`;
+        html += '</tr>';
+    }
+
+    // Column sums row
+    html += `<tr><td class="ed-td-label" style="${stickyLeft}font-weight:bold;">Σ in%</td>`;
+    for (const i of colOrder) {
+        const cs = colSum(i);
+        const ok = Math.abs(cs - 100) < 1;
+        html += `<td class="ed-sum ${ok ? 'sum-ok' : 'sum-bad'}" id="colsum-${i}">${cs}%</td>`;
+    }
+    html += '<td></td></tr>';
+
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.addEventListener('input', onCellInput);
+    // Column header sorting
+    tbl.querySelector('thead').addEventListener('click', e => {
+        const th = e.target.closest('th[data-sort]');
+        if (!th) return;
+        const key = th.dataset.sort;
+        const k = key === 'country' ? 'country' : key === 'rowsum' ? 'rowsum' : key;
+        if (sortKey === k) sortDir *= -1;
+        else { sortKey = k; sortDir = -1; }
+        render();
+    });
+    // Row label sorting (sort columns by that row's values)
+    tbl.querySelector('tbody').addEventListener('click', e => {
+        const td = e.target.closest('td[data-rowsort]');
+        if (!td) return;
+        const k = 'row:' + td.dataset.rowsort;
+        if (sortKey === k) sortDir *= -1;
+        else { sortKey = k; sortDir = -1; }
+        render();
+    });
+    updateGlobalStatus();
+}
+
+function onCellInput(e) {
+    const inp = e.target;
+    if (!inp.dataset.code) return;
+    const code = inp.dataset.code;
+    const col = +inp.dataset.col;
+    const ci = countries.indexOf(code);
+    const isSelf = col === ci;
+    const val = Math.max(0, Math.min(100, parseFloat(inp.value) || 0));
+    data[code][col] = val;
+    if (!isSelf) inp.className = val === 0 ? 'ed-num zero' : 'ed-num';
+    inp.closest('td').style.cssText = cellColor(val, isSelf);
+
+    // update row sum (informational)
+    const sumCell = document.getElementById(`sum-${code}`);
+    if (sumCell) sumCell.textContent = rowSum(code);
+
+    // update col sum (validated to 100%)
+    const cs = colSum(col);
+    const csOk = Math.abs(cs - 100) < 1;
+    const colSumCell = document.getElementById(`colsum-${col}`);
+    if (colSumCell) {
+        colSumCell.textContent = cs + '%';
+        colSumCell.className = `ed-sum ${csOk ? 'sum-ok' : 'sum-bad'}`;
+    }
+
+    updateGlobalStatus();
+}
+
+function updateGlobalStatus() {
+    const badCols = [];
+    for (let i = 0; i < countries.length; i++) {
+        if (Math.abs(colSum(i) - 100) >= 1) badCols.push(countries[i]);
+    }
+    const el = document.getElementById('status');
+    if (badCols.length === 0) {
+        el.textContent = `All ${countries.length} columns sum to 100% ✓`;
+        el.className = 'ed-status ok';
+    } else {
+        el.textContent = `${badCols.length} columns off 100%: ${badCols.join(', ')}`;
+        el.className = 'ed-status err';
+    }
+}
+
+document.getElementById('btn-load').addEventListener('click', async () => {
+    try {
+        [fileHandle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: {'application/json': ['.json']} }] });
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        ingest(JSON.parse(text));
+        document.getElementById('status').textContent = `Opened ${file.name}`;
+    } catch(e) { /* cancelled */ }
+});
+
+document.getElementById('btn-save').addEventListener('click', async () => {
+    const json = toJson();
+    try {
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: 'softpower.json',
+                types: [{ description: 'JSON', accept: {'application/json': ['.json']} }],
+            });
+        }
+        const w = await fileHandle.createWritable();
+        await w.write(json);
+        await w.close();
+        document.getElementById('status').textContent = 'Saved ✓';
+        document.getElementById('status').className = 'ed-status ok';
+    } catch(e) {
+        const a = Object.assign(document.createElement('a'), {
+            href: 'data:application/json,' + encodeURIComponent(json),
+            download: 'softpower.json',
+        });
+        a.click();
+    }
+});
+
+loadFromPath();
+</script>
+</body>
+</html>

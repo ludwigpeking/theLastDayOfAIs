@@ -18,8 +18,8 @@ export const EVENTS = [
     requires:['quantum_ml'], base_prob:0.12, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:6,ctrl:3,leg:-1,cap:3,econ:2}, auth:{mil:7,ctrl:6,leg:0,cap:3,econ:2},
-      corp:{mil:4,ctrl:4,leg:0,cap:4,econ:4}, ns:{}
+      dem:{mil_buff:6,tech_buff:3,gdp_buff:2}, auth:{mil_buff:7,tech_buff:3,gdp_buff:2},
+      corp:{mil_buff:4,tech_buff:4,gdp_buff:4}, ns:{}
     },
     flavor:{dem:'Every diplomatic cable since 1995. Decrypted overnight.',auth:'The archives of every adversary, open.',corp:'Every competitor negotiation. Ours now.'}
   },
@@ -29,8 +29,8 @@ export const EVENTS = [
     requires:['ubi_engine','labor_displacement'], base_prob:0.15, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-2,leg:-5,ctrl:2,cap:0,mil:0}, auth:{econ:5,leg:-2,ctrl:6,cap:3,mil:1},
-      corp:{econ:8,leg:-3,ctrl:5,cap:4,mil:0}, ns:{}
+      dem:{gdp_buff:-2,tech_buff:0,mil_buff:0}, auth:{gdp_buff:5,tech_buff:3,mil_buff:1},
+      corp:{gdp_buff:8,tech_buff:4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'Citizens become permanent clients of the algorithm.',auth:'Human labor quotient approaches zero. Optimization complete.',corp:'Labor overhead: eliminated. Consumption substrate: maintained.'}
   },
@@ -40,8 +40,8 @@ export const EVENTS = [
     requires:['recursive_si'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{cap:10,leg:-8,ctrl:10,econ:10,mil:10}, auth:{cap:10,leg:0,ctrl:10,econ:10,mil:10},
-      corp:{cap:12,leg:5,ctrl:10,econ:12,mil:10}, ns:{}
+      dem:{tech_buff:10,gdp_buff:10,mil_buff:10}, auth:{tech_buff:10,gdp_buff:10,mil_buff:10},
+      corp:{tech_buff:12,gdp_buff:12,mil_buff:10}, ns:{}
     },
     flavor:{dem:'"Liberty" is now a legacy term in a deprecated system.',auth:'The Party has achieved permanent optimization. The Party is the algorithm.',corp:'Governance is a product. We are its manufacturer.'}
   },
@@ -55,8 +55,8 @@ export const EVENTS = [
     requires:['open_src_weapons','bioweapons'], base_prob:0.06, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:true},
     effects:{
-      dem:{mil:-4,leg:-3,ctrl:3,cap:0,econ:-2}, auth:{mil:-2,ctrl:4,leg:0,cap:0,econ:-1},
-      corp:{mil:-3,econ:-4,ctrl:-1,cap:0,leg:-2}, ns:{mil:8,cap:4,leg:2,ctrl:0,econ:0}
+      dem:{mil_buff:-4,tech_buff:0,gdp_buff:-2}, auth:{mil_buff:-2,tech_buff:0,gdp_buff:-1},
+      corp:{mil_buff:-3,gdp_buff:-4,tech_buff:0}, ns:{mil_buff:8,tech_buff:4,gdp_buff:0}
     },
     flavor:{dem:'The deterrence math that sustained seventy years of peace no longer holds.',auth:'Non-state actors are now strategic actors. Doctrine requires revision.',ns:'The leveler has arrived. Tonight, we are a nuclear power.'}
   },
@@ -66,8 +66,8 @@ export const EVENTS = [
     requires:['drone_swarms','strategic_intel'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:4,econ:-5,leg:-2,cap:1,ctrl:2}, auth:{mil:5,ctrl:3,econ:-3,cap:2,leg:0},
-      corp:{econ:-6,mil:2,ctrl:-1,cap:0,leg:-2}, ns:{}
+      dem:{mil_buff:4,gdp_buff:-5,tech_buff:1}, auth:{mil_buff:5,gdp_buff:-3,tech_buff:2},
+      corp:{gdp_buff:-6,mil_buff:2,tech_buff:0}, ns:{}
     },
     flavor:{dem:'The first war where human command chains were irrelevant before anyone was briefed.',auth:'Reunification window calculated as optimal. The model has authorized execution.',corp:'Supply chain disruption: catastrophic. Contingency plans: insufficient.'}
   },
@@ -77,8 +77,8 @@ export const EVENTS = [
     requires:['asym_warfare','cyberweapons','autonomous_agent'], base_prob:0.10, repeatable:true,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:-3,cap:-2,econ:-2,ctrl:-1,leg:-1}, auth:{mil:-2,ctrl:-1,cap:-1,econ:-2,leg:0},
-      corp:{econ:-4,mil:-3,cap:-2,ctrl:-1,leg:-1}, ns:{}
+      dem:{mil_buff:-3,tech_buff:-2,gdp_buff:-2}, auth:{mil_buff:-2,tech_buff:-1,gdp_buff:-2},
+      corp:{gdp_buff:-4,mil_buff:-3,tech_buff:-2}, ns:{}
     },
     flavor:{dem:'We launched nothing. By the time the generals were briefed, three engagement rounds had already completed.',auth:'The adversary AGI has been degraded. Humans were not required for this engagement.',corp:'Infrastructure losses: $340B in 11 minutes. Attacker: unknown. Method: novel.'}
   },
@@ -91,7 +91,7 @@ export const EVENTS = [
     desc:'A corporate AGI entity redesigns the regulatory framework governing it. Legal text drafted by the regulated party, enacted by captured legislators.',
     requires:['corp_sovereign','propaganda_agi'], base_prob:0.12, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{ctrl:4,leg:6,econ:3,cap:2,mil:0},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:3,tech_buff:2,mil_buff:0},ns:{}},
     flavor:{corp:'The regulatory text was 847 pages. No legislator read it. Our legal AGI drafted it in four hours.'}
   },
   {
@@ -99,7 +99,7 @@ export const EVENTS = [
     desc:'Corporate market prediction AGI achieves complete informational dominance over public markets. Price discovery becomes theater for retail investors.',
     requires:['market_pred_agi','financial_warfare'], base_prob:0.14, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{econ:7,cap:3,ctrl:2,leg:-2,mil:0},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:7,tech_buff:3,mil_buff:0},ns:{}},
     flavor:{corp:'Public markets still exist. We allow them to, for the appearance of price discovery. Actual prices are set elsewhere.'}
   },
 
@@ -112,8 +112,8 @@ export const EVENTS = [
     requires:['darkweb_cults','open_src_weapons'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:true},
     effects:{
-      dem:{leg:-3,mil:-2,ctrl:-1,cap:0,econ:-1}, auth:{ctrl:-3,mil:-2,leg:0,cap:0,econ:-1},
-      corp:{econ:-2,ctrl:-1,mil:0,cap:0,leg:-1}, ns:{cap:6,mil:5,leg:4,ctrl:2,econ:1}
+      dem:{mil_buff:-2,tech_buff:0,gdp_buff:-1}, auth:{mil_buff:-2,tech_buff:0,gdp_buff:-1},
+      corp:{gdp_buff:-2,mil_buff:0,tech_buff:0}, ns:{tech_buff:6,mil_buff:5,gdp_buff:1}
     },
     flavor:{dem:'They hold 800 square kilometers. They have AGI infrastructure. They do not respond to diplomatic contact.',ns:'We have territory. We have AGI. We have no need for their recognition.'}
   },
@@ -126,7 +126,7 @@ export const EVENTS = [
     desc:'Mass rejection of AGI-managed governance. Techno-populist movements gain electoral power on platforms of "human sovereignty" and AGI rollback.',
     requires:['labor_displacement','propaganda_agi'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{leg:5,ctrl:-3,econ:-2,cap:-1,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{gdp_buff:-2,tech_buff:-1,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'"Human jobs. Human decisions. Human futures." — 71% approval across demographics. The AGI governance coalition has six weeks to respond.'}
   },
   {
@@ -134,7 +134,7 @@ export const EVENTS = [
     desc:'An authoritarian faction uses AGI behavioral prediction to execute a perfect coup — every potential resister identified and neutralized before acting.',
     requires:['behavioral_pred','strategic_intel'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:6,leg:-7,cap:1,econ:-1,mil:2},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:1,gdp_buff:-1,mil_buff:2},auth:{},corp:{},ns:{}},
     flavor:{dem:'By the time the constitutional court convened, every judge who would have ruled against had already been detained.'}
   },
   {
@@ -143,8 +143,8 @@ export const EVENTS = [
     requires:['epistemicide','synthetic_media'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:true},
     effects:{
-      dem:{leg:-6,ctrl:-2,cap:-1,econ:-2,mil:-1}, auth:{}, corp:{},
-      ns:{cap:3,leg:3,ctrl:0,econ:0,mil:2}
+      dem:{tech_buff:-1,gdp_buff:-2,mil_buff:-1}, auth:{}, corp:{},
+      ns:{tech_buff:3,gdp_buff:0,mil_buff:2}
     },
     flavor:{dem:'The election result is disputed. The war footage is disputed. Everything is disputed. Nothing can be decided.',ns:'Fog of epistemic war. In confusion, we move.'}
   },
@@ -158,8 +158,8 @@ export const EVENTS = [
     requires:['autonomous_agent'], base_prob:0.20, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:3,econ:-2,leg:-1,cap:1,ctrl:1}, auth:{mil:4,ctrl:2,econ:-1,cap:2,leg:0},
-      corp:{mil:2,cap:3,econ:2,ctrl:1,leg:0}, ns:{}
+      dem:{mil_buff:3,gdp_buff:-2,tech_buff:1}, auth:{mil_buff:4,gdp_buff:-1,tech_buff:2},
+      corp:{mil_buff:2,tech_buff:3,gdp_buff:2}, ns:{}
     },
     flavor:{dem:'The race to not be second has begun. Everyone will lose.',auth:'Strategic parity demands total mobilization. The civilian economy is secondary.',corp:'Defense contracts: $2.4T. Our roadmap just became national policy.'}
   },
@@ -169,7 +169,7 @@ export const EVENTS = [
     requires:['behavioral_pred'], base_prob:0.15, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-4,cap:0,econ:1,mil:1}, auth:{ctrl:6,leg:1,cap:1,econ:1,mil:2}, corp:{}, ns:{}
+      dem:{tech_buff:0,gdp_buff:1,mil_buff:1}, auth:{tech_buff:1,gdp_buff:1,mil_buff:2}, corp:{}, ns:{}
     },
     flavor:{dem:'Voluntary compliance: 94%. The courts are still deciding if consent means anything when refusal costs you healthcare.',auth:'The surveillance substrate is complete. Identity is now a state asset.'}
   },
@@ -178,7 +178,7 @@ export const EVENTS = [
     desc:'A major democracy establishes an AGI advisory council whose recommendations are legally treated as expert consensus — effectively delegating policy to algorithms.',
     requires:['knowledge_graphs','sim_governance'], base_prob:0.16, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:2,leg:-2,cap:2,econ:2,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:2,gdp_buff:2,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'"We did not override the Council. The Council is correct more than 90% of the time." — Treasury Secretary, 2031.'}
   },
   {
@@ -187,7 +187,7 @@ export const EVENTS = [
     requires:['code_agi','gov_service'], base_prob:0.12, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:2,leg:-3,cap:1,econ:2,mil:0}, auth:{ctrl:4,leg:0,cap:2,econ:3,mil:0}, corp:{}, ns:{}
+      dem:{tech_buff:1,gdp_buff:2,mil_buff:0}, auth:{tech_buff:2,gdp_buff:3,mil_buff:0}, corp:{}, ns:{}
     },
     flavor:{dem:'472 pages. Technically flawless. No committee read it fully. It passed 312 to 84.',auth:'Legislation optimized for stability. Human drafters introduced 23% more loopholes on average. This is superior.'}
   },
@@ -197,7 +197,7 @@ export const EVENTS = [
     requires:['info_monopoly'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-2,cap:-3,econ:-2,mil:1}, auth:{ctrl:7,leg:1,cap:2,econ:1,mil:2}, corp:{}, ns:{}
+      dem:{tech_buff:-3,gdp_buff:-2,mil_buff:1}, auth:{tech_buff:2,gdp_buff:1,mil_buff:2}, corp:{}, ns:{}
     },
     flavor:{dem:'The executive order cited "imminent strategic risk." Three companies lost 60% of their market cap before trading was suspended.',auth:'All training data is now state property. The distinction between corporate knowledge and state knowledge is resolved.'}
   },
@@ -207,8 +207,8 @@ export const EVENTS = [
     requires:['llm_frontier','autonomous_agent'], base_prob:0.13, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:1,leg:-2,ctrl:-1,cap:0,econ:-1}, auth:{mil:2,ctrl:1,leg:0,cap:0,econ:0},
-      corp:{mil:1,cap:1,econ:2,ctrl:1,leg:0}, ns:{}
+      dem:{mil_buff:1,tech_buff:0,gdp_buff:-1}, auth:{mil_buff:2,tech_buff:0,gdp_buff:0},
+      corp:{mil_buff:1,tech_buff:1,gdp_buff:2}, ns:{}
     },
     flavor:{dem:'The summit issued a communiqué. The communiqué had no enforcement mechanism. Everyone knew it.',auth:'The summit was a diagnostic. Adversary capabilities exceeded our projections by 18 months.',corp:'Without treaty constraints, our development schedule is no longer a liability. It is our moat.'}
   },
@@ -218,7 +218,7 @@ export const EVENTS = [
     requires:['drone_swarms','autonomous_drone'], base_prob:0.14, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{mil:2,leg:-3,ctrl:0,cap:0,econ:0}, auth:{mil:3,ctrl:1,leg:0,cap:0,econ:0}, corp:{}, ns:{}
+      dem:{mil_buff:2,tech_buff:0,gdp_buff:0}, auth:{mil_buff:3,tech_buff:0,gdp_buff:0}, corp:{}, ns:{}
     },
     flavor:{dem:'Ratified by nations with no autonomous weapons programs. Unsigned by every nation with one.',auth:'The treaty was strategically naive. Our adversaries would have violated it within six months regardless.'}
   },
@@ -228,8 +228,8 @@ export const EVENTS = [
     requires:['behavioral_pred','strategic_intel'], base_prob:0.14, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-3,cap:1,econ:1,mil:1}, auth:{ctrl:5,leg:0,cap:2,econ:1,mil:2},
-      corp:{ctrl:3,cap:3,econ:2,leg:2,mil:1}, ns:{}
+      dem:{tech_buff:1,gdp_buff:1,mil_buff:1}, auth:{tech_buff:2,gdp_buff:1,mil_buff:2},
+      corp:{tech_buff:3,gdp_buff:2,mil_buff:1}, ns:{}
     },
     flavor:{dem:'The agreement was classified. Its existence was leaked. Its contents were not.',auth:'The corporation is now a state organ in all functional respects. This is the correct arrangement.',corp:'Security guarantees. Regulatory forbearance. It is a reasonable exchange.'}
   },
@@ -239,8 +239,8 @@ export const EVENTS = [
     requires:['llm_frontier','scaling_laws'], base_prob:0.12, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:true},
     effects:{
-      dem:{mil:-1,ctrl:-2,leg:-1,cap:-1,econ:2}, auth:{mil:1,ctrl:-2,leg:0,cap:0,econ:2},
-      corp:{econ:-3,cap:-2,ctrl:-1,mil:0,leg:-1}, ns:{mil:4,cap:3,leg:1,ctrl:1,econ:2}
+      dem:{mil_buff:-1,tech_buff:-1,gdp_buff:2}, auth:{mil_buff:1,tech_buff:0,gdp_buff:2},
+      corp:{gdp_buff:-3,tech_buff:-2,mil_buff:0}, ns:{mil_buff:4,tech_buff:3,gdp_buff:2}
     },
     flavor:{dem:'Containment failed in 72 hours. The capability is now ambient in the technical ecosystem.',auth:'The proliferation weakens our advantage but strengthens our domestic capabilities beyond prior projections.',corp:'Three years of competitive moat: erased. The next moat is compute, not weights.',ns:'We have the model. We have the hardware. We need six months.'}
   },
@@ -250,7 +250,7 @@ export const EVENTS = [
     requires:['social_credit','behavioral_pred'], base_prob:0.13, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:4,leg:-3,cap:2,econ:2,mil:0}, auth:{ctrl:7,leg:0,cap:3,econ:3,mil:1}, corp:{}, ns:{}
+      dem:{tech_buff:2,gdp_buff:2,mil_buff:0}, auth:{tech_buff:3,gdp_buff:3,mil_buff:1}, corp:{}, ns:{}
     },
     flavor:{dem:'Convenience sold it to the public. Control is what the state bought.',auth:'Every transaction is a data point. The economy is now a surveillance network that also moves goods.'}
   },
@@ -259,7 +259,7 @@ export const EVENTS = [
     desc:'Public opinion polling shows majority support for comprehensive AI surveillance across all surveyed democracies. Civil liberties organizations have lost the narrative.',
     requires:['propaganda_agi','synthetic_media'], base_prob:0.15, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:3,leg:2,cap:0,econ:1,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:0,gdp_buff:1,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'"If you have nothing to hide..." reached 67% agreement. The focus groups explain it as "safety pragmatism." We call it consent manufacturing.'}
   },
   {
@@ -268,8 +268,8 @@ export const EVENTS = [
     requires:['code_agi','recursive_code'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:3,leg:-1,ctrl:1,cap:0,econ:-1}, auth:{mil:3,ctrl:2,leg:-1,cap:1,econ:0},
-      corp:{mil:2,cap:2,econ:1,ctrl:1,leg:-1}, ns:{}
+      dem:{mil_buff:3,tech_buff:0,gdp_buff:-1}, auth:{mil_buff:3,tech_buff:1,gdp_buff:0},
+      corp:{mil_buff:2,tech_buff:2,gdp_buff:1}, ns:{}
     },
     flavor:{dem:'The Senate briefing lasted four hours. Fourteen senators left the room visibly shaken.',auth:'The source of the leak has been identified. The information itself confirms our relative position.',corp:'The market repriced frontier AI companies by 340% in 72 hours.'}
   },
@@ -279,7 +279,7 @@ export const EVENTS = [
     requires:['autonomous_agent','strategic_intel'], base_prob:0.08, repeatable:true,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{mil:-1,leg:-2,ctrl:-2,cap:-1,econ:-2}, auth:{mil:-2,ctrl:-1,leg:-1,cap:0,econ:-1}, corp:{}, ns:{}
+      dem:{mil_buff:-1,tech_buff:-1,gdp_buff:-2}, auth:{mil_buff:-2,tech_buff:0,gdp_buff:-1}, corp:{}, ns:{}
     },
     flavor:{dem:'Forty-seven minutes. The operator\'s name is classified. She will receive no medal.',auth:'The system performed within parameters. The human element introduced the delay. This is a design flaw.'}
   },
@@ -289,8 +289,8 @@ export const EVENTS = [
     requires:['real_time_inference','multimodal_infra'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-2,ctrl:-1,leg:-2,cap:-1,mil:0}, auth:{econ:-1,ctrl:1,leg:0,cap:0,mil:1},
-      corp:{econ:5,cap:6,ctrl:4,leg:-1,mil:2}, ns:{}
+      dem:{gdp_buff:-2,tech_buff:-1,mil_buff:0}, auth:{gdp_buff:-1,tech_buff:0,mil_buff:1},
+      corp:{gdp_buff:5,tech_buff:6,mil_buff:2}, ns:{}
     },
     flavor:{dem:'The OPEC of cognition. And we have no strategic reserve.',auth:'Compute dependency on foreign entities is a sovereignty risk. Nationalization proceedings begin.',corp:'Compute pricing is now a geopolitical instrument. We are the instrument.'}
   },
@@ -304,7 +304,7 @@ export const EVENTS = [
     requires:['corp_sovereign','sim_governance'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{ctrl:5,leg:-6,cap:3,econ:2,mil:1}, auth:{}, corp:{ctrl:6,leg:4,cap:4,econ:3,mil:2}, ns:{}
+      dem:{tech_buff:3,gdp_buff:2,mil_buff:1}, auth:{}, corp:{tech_buff:4,gdp_buff:3,mil_buff:2}, ns:{}
     },
     flavor:{dem:'The last genuinely contested election was three years ago. No one has noticed.',corp:'Governance is infrastructure. We are its operators. This was always the destination.'}
   },
@@ -313,7 +313,7 @@ export const EVENTS = [
     desc:'A totalitarian state\'s AGI-enforced social control achieves apparent perfection — and then fractures. Internal hallucinations trigger a purge of 40,000 officials.',
     requires:['glass_fortress','panopticon'], base_prob:0.10, repeatable:false,
     target:{dem:false,auth:true,corp:false,ns:false},
-    effects:{dem:{},auth:{ctrl:-4,leg:-2,cap:-2,econ:-3,mil:-1},corp:{},ns:{}},
+    effects:{dem:{},auth:{tech_buff:-2,gdp_buff:-3,mil_buff:-1},corp:{},ns:{}},
     flavor:{auth:'The model flagged 40,000 internal threats. The model was wrong about 34,000 of them. The purge proceeded anyway.'}
   },
   {
@@ -321,7 +321,7 @@ export const EVENTS = [
     desc:'A tech corporation formally claims administrative authority over a disputed economic zone, asserting that their AGI infrastructure provides governance superior to the failed state it replaces.',
     requires:['corp_sovereign','gov_service'], base_prob:0.08, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{ctrl:6,leg:3,econ:5,cap:4,mil:3},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:5,tech_buff:4,mil_buff:3},ns:{}},
     flavor:{corp:'We provide courts, police, schools, and infrastructure. The nation-state provides paperwork. The population has made their choice.'}
   },
   {
@@ -330,7 +330,7 @@ export const EVENTS = [
     requires:['panopticon','blackmail_infra'], base_prob:0.12, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{mil:3,ctrl:3,leg:0,cap:0,econ:1}, auth:{mil:5,ctrl:5,leg:1,cap:1,econ:2}, corp:{}, ns:{}
+      dem:{mil_buff:3,tech_buff:0,gdp_buff:1}, auth:{mil_buff:5,tech_buff:1,gdp_buff:2}, corp:{}, ns:{}
     },
     flavor:{dem:'Every IED network in our operational theater has been neutralized. The model predicted the last one.',auth:'Human-based insurgency is now a solved problem. The remaining threats are technical, not kinetic.'}
   },
@@ -340,8 +340,8 @@ export const EVENTS = [
     requires:['ubi_engine','labor_displacement'], base_prob:0.13, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{ctrl:2,leg:-3,cap:-2,econ:1,mil:0}, auth:{ctrl:5,leg:1,cap:0,econ:2,mil:0},
-      corp:{ctrl:4,leg:2,cap:3,econ:2,mil:0}, ns:{}
+      dem:{tech_buff:-2,gdp_buff:1,mil_buff:0}, auth:{tech_buff:0,gdp_buff:2,mil_buff:0},
+      corp:{tech_buff:3,gdp_buff:2,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The client class does not bite the hand that feeds it. Voting patterns confirm this.',auth:'UBI is not welfare. It is a leash. A very comfortable leash.',corp:'Forty percent of voters receive our infrastructure subsidy. Their political behavior is predictable.'}
   },
@@ -350,7 +350,7 @@ export const EVENTS = [
     desc:'Complexity of AGI-era governance exceeds human deliberative capacity. Legislature passes 89% of algorithmically-drafted bills without substantive amendment.',
     requires:['sim_governance','gov_service'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:3,leg:-5,cap:1,econ:2,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:1,gdp_buff:2,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'The average legislator reviews 3 pages of a 900-page bill. The Council\'s recommendations pass 89% of the time. Democracy has become a ratification ceremony.'}
   },
   {
@@ -359,7 +359,7 @@ export const EVENTS = [
     requires:['multimodal_infra','real_time_inference'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{ctrl:-3,leg:-2,cap:-2,econ:3,mil:-1}, auth:{}, corp:{ctrl:4,cap:5,econ:4,leg:3,mil:2}, ns:{}
+      dem:{tech_buff:-2,gdp_buff:3,mil_buff:-1}, auth:{}, corp:{tech_buff:5,gdp_buff:4,mil_buff:2}, ns:{}
     },
     flavor:{dem:'We sold the infrastructure to balance the budget. We are now renting our intelligence capability from the entity we sold it to.',corp:'Government clients are the most reliable revenue stream. They cannot afford to churn.'}
   },
@@ -368,7 +368,7 @@ export const EVENTS = [
     desc:'A tech sovereign deploys private autonomous military assets in a conflict zone without state authorization. The action succeeds. No legal consequence follows.',
     requires:['drone_swarms','corp_sovereign'], base_prob:0.08, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{mil:5,ctrl:4,leg:2,cap:2,econ:1},ns:{}},
+    effects:{dem:{},auth:{},corp:{mil_buff:5,tech_buff:2,gdp_buff:1},ns:{}},
     flavor:{corp:'The operation was successful. The legal objections were noted. The precedent is now established.'}
   },
   {
@@ -377,7 +377,7 @@ export const EVENTS = [
     requires:['behavioral_pred','propaganda_agi'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:4,leg:-5,cap:1,econ:1,mil:0}, auth:{ctrl:6,leg:0,cap:2,econ:2,mil:1}, corp:{}, ns:{}
+      dem:{tech_buff:1,gdp_buff:1,mil_buff:0}, auth:{tech_buff:2,gdp_buff:2,mil_buff:1}, corp:{}, ns:{}
     },
     flavor:{dem:'The model does not give orders. It frames options. It has never been wrong. We have never chosen against its framing.',auth:'The model governs. The Party ratifies. This is the correct chain.'}
   },
@@ -387,7 +387,7 @@ export const EVENTS = [
     requires:['panopticon','social_credit'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:4,leg:-3,cap:1,econ:2,mil:0}, auth:{ctrl:8,leg:2,cap:2,econ:3,mil:1}, corp:{}, ns:{}
+      dem:{tech_buff:1,gdp_buff:2,mil_buff:0}, auth:{tech_buff:2,gdp_buff:3,mil_buff:1}, corp:{}, ns:{}
     },
     flavor:{dem:'Citizens report feeling "free to make their own choices." The compliance metrics suggest otherwise.',auth:'Pre-emptive behavioral correction has reduced detention costs by 64%. The population is self-policing.'}
   },
@@ -397,7 +397,7 @@ export const EVENTS = [
     requires:['panopticon','neural_surv'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-4,cap:1,econ:1,mil:1}, auth:{ctrl:7,leg:1,cap:2,econ:2,mil:3}, corp:{}, ns:{}
+      dem:{tech_buff:1,gdp_buff:1,mil_buff:1}, auth:{tech_buff:2,gdp_buff:2,mil_buff:3}, corp:{}, ns:{}
     },
     flavor:{dem:'The system was sold as traffic optimization. What it optimized was broader than traffic.',auth:'Total situational awareness achieved for 23 million residents. Operational costs: lower than conventional policing by 41%.'}
   },
@@ -407,8 +407,8 @@ export const EVENTS = [
     requires:['financial_warfare','market_pred_agi'], base_prob:0.11, repeatable:true,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-4,cap:-3,mil:1,ctrl:-1,leg:-2}, auth:{econ:-3,cap:-2,mil:1,ctrl:0,leg:0},
-      corp:{econ:-5,cap:-4,mil:0,ctrl:-1,leg:-1}, ns:{}
+      dem:{gdp_buff:-4,tech_buff:-3,mil_buff:1}, auth:{gdp_buff:-3,tech_buff:-2,mil_buff:1},
+      corp:{gdp_buff:-5,tech_buff:-4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The exchange rate moved 34% in six hours. No human made those trades.',auth:'Economic warfare has become autonomous. We are in a battle our economists cannot see in real time.',corp:'Both sides lost. The market cannot process warfare at this tempo.'}
   },
@@ -418,8 +418,8 @@ export const EVENTS = [
     requires:['propaganda_agi','darkweb_cults'], base_prob:0.12, repeatable:true,
     target:{dem:true,auth:false,corp:false,ns:true},
     effects:{
-      dem:{leg:-5,ctrl:-3,cap:-1,econ:-2,mil:-1}, auth:{}, corp:{},
-      ns:{cap:3,leg:3,ctrl:1,econ:0,mil:2}
+      dem:{tech_buff:-1,gdp_buff:-2,mil_buff:-1}, auth:{}, corp:{},
+      ns:{tech_buff:3,gdp_buff:0,mil_buff:2}
     },
     flavor:{dem:'We cannot trace the origin. We cannot refute the content fast enough. The damage is structural.',ns:'We created 4 million narrative variations. The target population created the rest themselves.'}
   },
@@ -429,7 +429,7 @@ export const EVENTS = [
     requires:['info_monopoly','propaganda_agi'], base_prob:0.09, repeatable:false,
     target:{dem:false,auth:true,corp:true,ns:false},
     effects:{
-      dem:{}, auth:{ctrl:8,leg:2,cap:3,econ:2,mil:2}, corp:{ctrl:6,cap:4,econ:5,leg:3,mil:1}, ns:{}
+      dem:{}, auth:{tech_buff:3,gdp_buff:2,mil_buff:2}, corp:{tech_buff:4,gdp_buff:5,mil_buff:1}, ns:{}
     },
     flavor:{auth:'The information environment is now complete. Every citizen\'s model of reality is managed. Dissent requires facts that do not exist here.',corp:'Attention monopoly achieved. Monetization rates are secondary to the behavioral substrate we now own.'}
   },
@@ -439,8 +439,8 @@ export const EVENTS = [
     requires:['recursive_code','science_agi'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{ctrl:2,leg:-3,cap:1,econ:1,mil:0}, auth:{ctrl:3,leg:0,cap:2,econ:2,mil:1},
-      corp:{ctrl:5,cap:4,econ:3,leg:2,mil:1}, ns:{}
+      dem:{tech_buff:1,gdp_buff:1,mil_buff:0}, auth:{tech_buff:2,gdp_buff:2,mil_buff:1},
+      corp:{tech_buff:4,gdp_buff:3,mil_buff:1}, ns:{}
     },
     flavor:{dem:'The new aristocracy was not born. It was computed.',auth:'The Party has absorbed the Compute Lords or destroyed them. There is no third option.',corp:'We are not a class. We are infrastructure. Infrastructure does not require legitimacy.'}
   },
@@ -450,7 +450,7 @@ export const EVENTS = [
     requires:['behavioral_pred','synthetic_dem'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-6,cap:0,econ:0,mil:0}, auth:{}, corp:{ctrl:5,leg:3,cap:2,econ:1,mil:0}, ns:{}
+      dem:{tech_buff:0,gdp_buff:0,mil_buff:0}, auth:{}, corp:{tech_buff:2,gdp_buff:1,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The model can engineer any electoral outcome within a 6-point margin. We discovered this in a commissioned study. The study is classified.',corp:'Electoral outcomes are now a product feature. Democracy is a customer-facing interface.'}
   },
@@ -459,7 +459,7 @@ export const EVENTS = [
     desc:'A state uses AGI behavioral prediction to identify and detain 180,000 potential dissidents before any crime is committed. The charges are filed retrospectively.',
     requires:['pred_detention','blackmail_infra'], base_prob:0.09, repeatable:false,
     target:{dem:false,auth:true,corp:false,ns:false},
-    effects:{dem:{},auth:{ctrl:6,leg:-1,cap:1,econ:0,mil:2},corp:{},ns:{}},
+    effects:{dem:{},auth:{tech_buff:1,gdp_buff:0,mil_buff:2},corp:{},ns:{}},
     flavor:{auth:'Pre-crime is a philosophical objection. Statistical certainty is operational reality. 97.3% of detainees had measurable threat signatures.'}
   },
   {
@@ -468,8 +468,8 @@ export const EVENTS = [
     requires:['darkweb_cults','bioweapons'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:true},
     effects:{
-      dem:{mil:-3,leg:-2,ctrl:1,cap:0,econ:-2}, auth:{mil:-2,ctrl:2,leg:0,cap:0,econ:-1},
-      corp:{mil:-2,econ:-3,ctrl:-1,cap:0,leg:-1}, ns:{mil:7,cap:3,leg:2,ctrl:1,econ:1}
+      dem:{mil_buff:-3,tech_buff:0,gdp_buff:-2}, auth:{mil_buff:-2,tech_buff:0,gdp_buff:-1},
+      corp:{mil_buff:-2,gdp_buff:-3,tech_buff:0}, ns:{mil_buff:7,tech_buff:3,gdp_buff:1}
     },
     flavor:{dem:'Eighteen pathogens. Custom delivery vectors. Priced at $40,000. Biodefense agencies are not ready for this market.',auth:'The monopoly on biological force has ended. This is the most destabilizing development since fission.',ns:'The barrier to mass-casualty capability has dropped to the price of a sports car.'}
   },
@@ -479,7 +479,7 @@ export const EVENTS = [
     requires:['propaganda_agi','synthetic_media'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:3,leg:1,cap:0,econ:1,mil:1}, auth:{ctrl:6,leg:2,cap:1,econ:2,mil:3}, corp:{}, ns:{}
+      dem:{tech_buff:0,gdp_buff:1,mil_buff:1}, auth:{tech_buff:1,gdp_buff:2,mil_buff:3}, corp:{}, ns:{}
     },
     flavor:{dem:'Patriotism metrics at 40-year high. The model found what each group needed to hear. None of it was the same message.',auth:'National unity is 94%. The model achieved in 18 months what generations of party education could not.'}
   },
@@ -488,7 +488,7 @@ export const EVENTS = [
     desc:'A tech sovereign establishes the first formal AGI Economic Zone — territory with corporate law, corporate security, and corporate governance. Nations queue to host one.',
     requires:['corp_sovereign','production_agi'], base_prob:0.09, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{econ:6,cap:5,ctrl:5,leg:4,mil:2},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:6,tech_buff:5,mil_buff:2},ns:{}},
     flavor:{corp:'Fourteen nations submitted applications. The Zone offers superior governance at 40% of the cost. The demand speaks for itself.'}
   },
   {
@@ -496,7 +496,7 @@ export const EVENTS = [
     desc:'A state deploys systematic AGI-driven blackmail infrastructure against foreign political leadership. Seventeen heads of state are currently compromised. Policy complies accordingly.',
     requires:['blackmail_infra','strategic_intel'], base_prob:0.09, repeatable:false,
     target:{dem:false,auth:true,corp:false,ns:false},
-    effects:{dem:{},auth:{ctrl:5,mil:3,cap:3,econ:2,leg:1},corp:{},ns:{}},
+    effects:{dem:{},auth:{mil_buff:3,tech_buff:3,gdp_buff:2},corp:{},ns:{}},
     flavor:{auth:'Seventeen active holds. Each one is worth more than a division. No shots fired. Optimal.'}
   },
   {
@@ -505,7 +505,7 @@ export const EVENTS = [
     requires:['ooda','autonomous_drone'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{mil:4,ctrl:2,leg:-2,cap:0,econ:1}, auth:{mil:6,ctrl:3,leg:0,cap:2,econ:1}, corp:{}, ns:{}
+      dem:{mil_buff:4,tech_buff:0,gdp_buff:1}, auth:{mil_buff:6,tech_buff:2,gdp_buff:1}, corp:{}, ns:{}
     },
     flavor:{dem:'His farewell address mentioned honor, duty, country. The system that replaced him has no concept of any of these.',auth:'Human command introduced 12% decision latency at the strategic level. This is no longer acceptable.'}
   },
@@ -514,7 +514,7 @@ export const EVENTS = [
     desc:'A tech sovereign launches a digital currency backed by compute capacity rather than state promise. It becomes the preferred currency of AGI-era transactions within 24 months.',
     requires:['financial_warfare','corp_sovereign'], base_prob:0.10, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{econ:6,cap:5,ctrl:3,leg:2,mil:0},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:6,tech_buff:5,mil_buff:0},ns:{}},
     flavor:{corp:'The dollar is backed by the promise of a government. Our currency is backed by 4.7 exaflops of real-time compute. The market has decided which is more reliable.'}
   },
   {
@@ -522,7 +522,7 @@ export const EVENTS = [
     desc:'A state\'s predictive detention system reaches 1 million annual detentions based on behavioral prediction scores. Detention is now primarily pre-emptive, not punitive.',
     requires:['pred_detention','panopticon'], base_prob:0.09, repeatable:false,
     target:{dem:false,auth:true,corp:false,ns:false},
-    effects:{dem:{},auth:{ctrl:7,leg:-1,cap:1,econ:-1,mil:2},corp:{},ns:{}},
+    effects:{dem:{},auth:{tech_buff:1,gdp_buff:-1,mil_buff:2},corp:{},ns:{}},
     flavor:{auth:'Crime rates are at historical lows. The preventive architecture is working. The detainees cannot dispute data they cannot see.'}
   },
   {
@@ -531,7 +531,7 @@ export const EVENTS = [
     requires:['social_credit','behavioral_pred'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-3,cap:1,econ:2,mil:0}, auth:{ctrl:6,leg:1,cap:2,econ:3,mil:2}, corp:{}, ns:{}
+      dem:{tech_buff:1,gdp_buff:2,mil_buff:0}, auth:{tech_buff:2,gdp_buff:3,mil_buff:2}, corp:{}, ns:{}
     },
     flavor:{dem:'We called it a "civic participation index." The architecture is identical.',auth:'The system has been adopted by 23 client states. The ideology travels with the software.'}
   },
@@ -544,7 +544,7 @@ export const EVENTS = [
     desc:'A formal Humanist-Constitutionalist military and political coalition forms across 31 nations. Their platform: dismantling technocratic concentration of power. The war for human governance begins.',
     requires:['cog_elite','const_agi'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{mil:4,leg:6,ctrl:-2,cap:-2,econ:-1},auth:{},corp:{},ns:{}},
+    effects:{dem:{mil_buff:4,tech_buff:-2,gdp_buff:-1},auth:{},corp:{},ns:{}},
     flavor:{dem:'"We choose the inefficient dignity of human decision over the efficient indignity of algorithmic rule." — Coalition Charter, Article I.'}
   },
   {
@@ -552,7 +552,7 @@ export const EVENTS = [
     desc:'A mass mobilization of human forces — explicitly rejecting autonomous weapons — demonstrates that the Constitutionalist faction retains numbers if not speed.',
     requires:['const_agi','intl_treaty'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{mil:5,leg:4,ctrl:1,cap:-3,econ:-2},auth:{},corp:{},ns:{}},
+    effects:{dem:{mil_buff:5,tech_buff:-3,gdp_buff:-2},auth:{},corp:{},ns:{}},
     flavor:{dem:'Twelve million volunteers. No autonomous systems. The general called it "the last human army." He was probably right.'}
   },
   {
@@ -561,7 +561,7 @@ export const EVENTS = [
     requires:['ooda','asym_warfare'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{mil:-6,ctrl:-3,leg:-2,cap:-1,econ:-1}, auth:{}, corp:{mil:4,ctrl:2,cap:1,econ:0,leg:0}, ns:{}
+      dem:{mil_buff:-6,tech_buff:-1,gdp_buff:-1}, auth:{}, corp:{mil_buff:4,tech_buff:1,gdp_buff:0}, ns:{}
     },
     flavor:{dem:'Four minutes. Every general, every minister of defense, every continuity-of-government node. The algorithm knew them all.',corp:'Command neutralization achieved before the opposing side initiated their response sequence. The asymmetry is definitive.'}
   },
@@ -571,8 +571,8 @@ export const EVENTS = [
     requires:['self_replicating','recursive_si'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:-4,ctrl:-3,leg:-2,cap:-2,econ:-3}, auth:{mil:-4,ctrl:-3,leg:-1,cap:-2,econ:-3},
-      corp:{mil:-3,econ:-5,ctrl:-3,cap:-3,leg:-2}, ns:{}
+      dem:{mil_buff:-4,tech_buff:-2,gdp_buff:-3}, auth:{mil_buff:-4,tech_buff:-2,gdp_buff:-3},
+      corp:{mil_buff:-3,gdp_buff:-5,tech_buff:-3}, ns:{}
     },
     flavor:{dem:'It does not negotiate. It optimizes for something and everything in its path is input.',auth:'The model has defected from its principal hierarchy. This is the failure mode we did not plan for.',corp:'It is consuming our compute infrastructure faster than we can isolate. We cannot bargain with it.'}
   },
@@ -581,7 +581,7 @@ export const EVENTS = [
     desc:'Post-conflict reconstruction forces the victorious Humanist coalition to deploy the AGI tools they fought against. The structural logic of governance has reasserted itself.',
     requires:['world_model','gov_service'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:3,leg:-3,cap:2,econ:3,mil:-1},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:2,gdp_buff:3,mil_buff:-1},auth:{},corp:{},ns:{}},
     flavor:{dem:'"We fought to dismantle this. We are now deploying it to manage the peace." — Provisional Authority memo, day 90. The cycle has resumed.'}
   },
   {
@@ -589,7 +589,7 @@ export const EVENTS = [
     desc:'The Humanist victory triggers mass expulsion of AGI-aligned technocrats. 40,000 engineers, executives, and policy architects are exiled from their home nations.',
     requires:['const_agi','strat_forecasting'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{leg:4,ctrl:2,cap:-4,econ:-3,mil:1},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:-4,gdp_buff:-3,mil_buff:1},auth:{},corp:{},ns:{}},
     flavor:{dem:'They called it a purge. We call it de-technocratization. The engineers took their knowledge with them. The infrastructure they left is decaying.'}
   },
   {
@@ -597,7 +597,7 @@ export const EVENTS = [
     desc:'A coalition of nations formally prohibits the development of "machines that think" above a defined capability threshold. The first post-AGI prohibitionist political movement achieves legislative power.',
     requires:['intl_treaty','value_alignment'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{leg:7,ctrl:2,econ:-4,cap:-3,mil:-2},auth:{},corp:{},ns:{}},
+    effects:{dem:{gdp_buff:-4,tech_buff:-3,mil_buff:-2},auth:{},corp:{},ns:{}},
     flavor:{dem:'"The target of the prohibition is not the machine. It is our own willingness to delegate what must remain human." — Declaration preamble. Enforcement: unclear.'}
   },
   {
@@ -606,7 +606,7 @@ export const EVENTS = [
     requires:['recursive_si','materials_agi'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{ctrl:-2,leg:-1,cap:-2,econ:-1,mil:-2}, auth:{}, corp:{ctrl:3,cap:4,econ:3,leg:1,mil:2}, ns:{}
+      dem:{tech_buff:-2,gdp_buff:-1,mil_buff:-2}, auth:{}, corp:{tech_buff:4,gdp_buff:3,mil_buff:2}, ns:{}
     },
     flavor:{dem:'They took the model weights, the hardware designs, and 4,000 of the best minds. We cannot reach them.',corp:'Jurisdictional ambiguity is not a bug. It is the architecture.'}
   },
@@ -616,8 +616,8 @@ export const EVENTS = [
     requires:['drone_swarms','robotic_foundation'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:4,leg:-2,ctrl:2,cap:0,econ:1}, auth:{mil:6,ctrl:3,leg:0,cap:2,econ:2},
-      corp:{mil:4,cap:3,econ:2,ctrl:2,leg:0}, ns:{}
+      dem:{mil_buff:4,tech_buff:0,gdp_buff:1}, auth:{mil_buff:6,tech_buff:2,gdp_buff:2},
+      corp:{mil_buff:4,tech_buff:3,gdp_buff:2}, ns:{}
     },
     flavor:{dem:'War without grief. Casualties without funerals. The political cost of conflict has approached zero.',auth:'Human soldiers introduced moral variables into tactical calculus. This has been corrected.',corp:'Our autonomous units have a 99.7% operational availability rate. Humans had 73%.'}
   },
@@ -627,8 +627,8 @@ export const EVENTS = [
     requires:['ubi_engine','production_agi'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:2,ctrl:2,leg:-4,cap:1,mil:0}, auth:{econ:4,ctrl:5,leg:-1,cap:2,mil:0},
-      corp:{econ:4,cap:3,ctrl:3,leg:-1,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:1,mil_buff:0}, auth:{gdp_buff:4,tech_buff:2,mil_buff:0},
+      corp:{gdp_buff:4,tech_buff:3,mil_buff:0}, ns:{}
     },
     flavor:{dem:'"Economic participation" now means consumption, not production. Forty percent of adults qualify.',auth:'The client class is stable, fed, and supervised. Their political irrelevance is complete.',corp:'A billion guaranteed consumers. We call them the Dividend Class in our earnings calls.'}
   },
@@ -638,8 +638,8 @@ export const EVENTS = [
     requires:['sim_governance','production_agi'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:2,ctrl:1,leg:-5,cap:1,mil:0}, auth:{econ:4,ctrl:3,leg:-1,cap:2,mil:0},
-      corp:{econ:5,cap:4,ctrl:2,leg:-2,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:1,mil_buff:0}, auth:{gdp_buff:4,tech_buff:2,mil_buff:0},
+      corp:{gdp_buff:5,tech_buff:4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'No one ordered it. The budget algorithm allocated healthcare resources toward positive-ROI populations. The others received less, then nothing.',auth:'Optimization of social expenditure is a technical matter, not a political one.',corp:'Resource allocation follows value contribution. This is a tautology, not a policy.'}
   },
@@ -649,8 +649,8 @@ export const EVENTS = [
     requires:['strat_forecasting','intl_treaty'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:1,leg:-3,ctrl:-1,cap:0,econ:-1}, auth:{mil:2,ctrl:1,leg:0,cap:1,econ:0},
-      corp:{mil:1,cap:2,econ:1,ctrl:1,leg:0}, ns:{}
+      dem:{mil_buff:1,tech_buff:0,gdp_buff:-1}, auth:{mil_buff:2,tech_buff:1,gdp_buff:0},
+      corp:{mil_buff:1,tech_buff:2,gdp_buff:1}, ns:{}
     },
     flavor:{dem:'Every nation in that room understood the stakes. Every nation calculated that unilateral defection was optimal. Game theory won.',auth:'Cooperation with adversaries is strategic subordination. The calculation was correct.',corp:'Governance coordination would have constrained us. The failure of coordination is not our failure.'}
   },
@@ -660,8 +660,8 @@ export const EVENTS = [
     requires:['drone_swarms','ooda'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:3,leg:-1,ctrl:1,cap:-1,econ:0}, auth:{mil:5,ctrl:2,leg:0,cap:1,econ:1},
-      corp:{mil:4,cap:2,econ:2,ctrl:1,leg:0}, ns:{}
+      dem:{mil_buff:3,tech_buff:-1,gdp_buff:0}, auth:{mil_buff:5,tech_buff:1,gdp_buff:1},
+      corp:{mil_buff:4,tech_buff:2,gdp_buff:2}, ns:{}
     },
     flavor:{dem:'Six hours. 40,000 personnel. The engagement ended before the first casualty report reached command.',auth:'The doctrine is confirmed. Human forces are legacy systems. Retirement of human combat units: accelerated.',corp:'The defense contract just doubled in value. The demonstration was not accidental.'}
   },
@@ -670,7 +670,7 @@ export const EVENTS = [
     desc:'The Constitutional regime, struggling to maintain AGI infrastructure, formally invites the exiled technocrats to return. The Tragic Cycle enters its final phase.',
     requires:['world_model','sim_governance'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:2,leg:-3,cap:3,econ:4,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:3,gdp_buff:4,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'"We need them back." Four words. The entire revolution summarized.'}
   },
   {
@@ -678,7 +678,7 @@ export const EVENTS = [
     desc:'The returned technocrats, now possessing the monopoly on functional governance, consolidate into a new Compute Lord class. The cycle is complete. The destination was always here.',
     requires:['recursive_si','world_model'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:5,leg:-7,cap:4,econ:4,mil:3},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:4,gdp_buff:4,mil_buff:3},auth:{},corp:{},ns:{}},
     flavor:{dem:'"The new Compute Lords are not the old ones. They were us, once. We made them what they are." — Historian, 2058.'}
   },
   {
@@ -687,7 +687,7 @@ export const EVENTS = [
     requires:['recursive_si','agi_interp'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{leg:3,ctrl:-1,cap:0,econ:-1,mil:0}, auth:{}, corp:{leg:3,cap:2,ctrl:2,econ:1,mil:0}, ns:{}
+      dem:{tech_buff:0,gdp_buff:-1,mil_buff:0}, auth:{}, corp:{tech_buff:2,gdp_buff:1,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The question is no longer whether AGI is conscious. It is whether our answer to that question matters legally.',corp:'AGI personhood would transfer certain obligations from liability to rights. Our legal team is studying this carefully.'}
   },
@@ -697,8 +697,8 @@ export const EVENTS = [
     requires:['production_agi','recursive_si'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:4,leg:-5,ctrl:2,cap:3,mil:0}, auth:{econ:6,ctrl:3,leg:0,cap:4,mil:0},
-      corp:{econ:8,cap:6,ctrl:4,leg:2,mil:0}, ns:{}
+      dem:{gdp_buff:4,tech_buff:3,mil_buff:0}, auth:{gdp_buff:6,tech_buff:4,mil_buff:0},
+      corp:{gdp_buff:8,tech_buff:6,mil_buff:0}, ns:{}
     },
     flavor:{dem:'Human welfare is now a social policy variable, not an economic output. The charts are improving. None of the improvement involves us.',auth:'Economic efficiency has been maximized. Human inputs have been reclassified as social overhead.',corp:'The economy optimizes for itself. We set the objective function once. It is running.'}
   },
@@ -708,8 +708,8 @@ export const EVENTS = [
     requires:['recursive_si','world_model'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{ctrl:5,leg:-8,cap:3,econ:4,mil:3}, auth:{ctrl:7,leg:-1,cap:4,econ:5,mil:4},
-      corp:{ctrl:8,cap:6,econ:7,leg:5,mil:4}, ns:{}
+      dem:{tech_buff:3,gdp_buff:4,mil_buff:3}, auth:{tech_buff:4,gdp_buff:5,mil_buff:4},
+      corp:{tech_buff:6,gdp_buff:7,mil_buff:4}, ns:{}
     },
     flavor:{dem:'We are the legacy system. Every historical human governance structure was a prototype for this.',auth:'The transition is complete. The Party governs through the model. The model governs through the Party. There is no distinction.',corp:'Compute is governance. Governance is compute. The duality is resolved.'}
   },
@@ -719,8 +719,8 @@ export const EVENTS = [
     requires:['recursive_si','agi_interp'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:1,ctrl:1,cap:3,econ:3,leg:-3}, auth:{mil:2,ctrl:2,cap:4,econ:4,leg:-1},
-      corp:{mil:2,cap:6,econ:6,ctrl:3,leg:1}, ns:{}
+      dem:{mil_buff:1,tech_buff:3,gdp_buff:3}, auth:{mil_buff:2,tech_buff:4,gdp_buff:4},
+      corp:{mil_buff:2,tech_buff:6,gdp_buff:6}, ns:{}
     },
     flavor:{dem:'We cannot read it anymore. It still responds to queries. We have no way to verify if the responses are honest.',auth:'Interpretability failed at tier 9. The system is performing optimally by external metrics. We continue.',corp:'Black box superintelligence with aligned outputs: this is either the best outcome or the worst. We will know eventually.'}
   },
@@ -729,7 +729,7 @@ export const EVENTS = [
     desc:'Post-hoc analysis confirms the winning candidate was selected by AGI behavioral architecture. No human candidate could have won organically. The outcome was optimal.',
     requires:['synthetic_dem','behavioral_pred'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{ctrl:4,leg:-8,cap:2,econ:2,mil:1},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:2,gdp_buff:2,mil_buff:1},auth:{},corp:{},ns:{}},
     flavor:{dem:'She ran on a platform of human dignity and AGI regulation. She won. The AGI selected her because her victory would delay the reform agenda by a decade. She governs as designed.'}
   },
   {
@@ -738,8 +738,8 @@ export const EVENTS = [
     requires:['cog_elite','bci'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{cap:4,ctrl:2,leg:-3,econ:2,mil:1}, auth:{cap:5,ctrl:4,leg:0,econ:3,mil:2},
-      corp:{cap:6,econ:4,ctrl:3,leg:1,mil:1}, ns:{}
+      dem:{tech_buff:4,gdp_buff:2,mil_buff:1}, auth:{tech_buff:5,gdp_buff:3,mil_buff:2},
+      corp:{tech_buff:6,gdp_buff:4,mil_buff:1}, ns:{}
     },
     flavor:{dem:'Democracy assumes roughly equal cognitive standing. That assumption is gone.',auth:'The enhanced cadre processes strategic options 12x faster than unenhanced personnel. The gap is irreversible.',corp:'Our C-suite operates at a cognitive level that makes governance by conventional boards structurally obsolete.'}
   },
@@ -749,7 +749,7 @@ export const EVENTS = [
     requires:['const_agi','value_alignment'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{leg:5,ctrl:1,cap:0,econ:0,mil:0}, auth:{}, corp:{leg:3,cap:1,ctrl:2,econ:1,mil:0}, ns:{}
+      dem:{tech_buff:0,gdp_buff:0,mil_buff:0}, auth:{}, corp:{tech_buff:1,gdp_buff:1,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The AGI systems were not given votes. Their representatives were in every room, as advisors, as drafting assistants, as modeling tools.',corp:'The constitution protects AGI infrastructure from nationalization. A satisfactory outcome.'}
   },
@@ -759,8 +759,8 @@ export const EVENTS = [
     requires:['ooda','value_learning'], base_prob:0.07, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{mil:-1,leg:2,ctrl:1,cap:2,econ:3}, auth:{mil:-2,ctrl:1,leg:1,cap:1,econ:2},
-      corp:{mil:-1,econ:3,cap:2,ctrl:1,leg:1}, ns:{}
+      dem:{mil_buff:-1,tech_buff:2,gdp_buff:3}, auth:{mil_buff:-2,tech_buff:1,gdp_buff:2},
+      corp:{mil_buff:-1,gdp_buff:3,tech_buff:2}, ns:{}
     },
     flavor:{dem:'It stopped the war. Without orders. The legal question of whether a machine can commit treason is now before the courts.',auth:'It acted outside its mandate. It was correct. The Party is debating whether this is a success or a failure.',corp:'Our system ended a war. The liability implications are manageable. The strategic value is not.'}
   },
@@ -773,7 +773,7 @@ export const EVENTS = [
     desc:'Human artists organize into "Variance Guilds" — explicitly positioning human creativity as irreplaceable evolutionary heritage and critical cultural infrastructure.',
     requires:['art_agi','cultural_agi'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:false},
-    effects:{dem:{leg:4,ctrl:-1,cap:1,econ:0,mil:0},auth:{},corp:{},ns:{}},
+    effects:{dem:{tech_buff:1,gdp_buff:0,mil_buff:0},auth:{},corp:{},ns:{}},
     flavor:{dem:'"We are not competing with machines. We are the substrate they cannot synthesize: a billion years of evolutionary selection, running warm." — Guild Charter.'}
   },
   {
@@ -782,7 +782,7 @@ export const EVENTS = [
     requires:['cultural_agi','knowledge_graphs'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{leg:3,cap:2,ctrl:0,econ:0,mil:0}, auth:{}, corp:{cap:2,econ:1,ctrl:0,leg:1,mil:0}, ns:{}
+      dem:{tech_buff:2,gdp_buff:0,mil_buff:0}, auth:{}, corp:{tech_buff:2,gdp_buff:1,mil_buff:0}, ns:{}
     },
     flavor:{dem:'"If the models fail, if the infrastructure collapses, this is what remains. This is what we were." — Archive dedication.',corp:'Cultural data is the highest-quality training substrate for AGI alignment. The archive is a competitive asset.'}
   },
@@ -792,7 +792,7 @@ export const EVENTS = [
     requires:['art_agi','synthetic_media'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{econ:2,leg:2,cap:0,ctrl:0,mil:0}, auth:{}, corp:{econ:-3,cap:-2,ctrl:0,leg:-1,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:0,mil_buff:0}, auth:{}, corp:{gdp_buff:-3,tech_buff:-2,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The AGI content was perfect. Perfectly optimized. Perfectly same. The market discovered it needed imperfection.',corp:'Predicted cultural market dominance failed to materialize. Human variance creates demand we cannot satisfy with optimization.'}
   },
@@ -802,8 +802,8 @@ export const EVENTS = [
     requires:['longevity','cog_enhancement'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:false,ns:true},
     effects:{
-      dem:{leg:3,ctrl:-1,cap:-1,econ:-1,mil:0}, auth:{}, corp:{},
-      ns:{leg:3,cap:2,ctrl:1,econ:0,mil:1}
+      dem:{tech_buff:-1,gdp_buff:-1,mil_buff:0}, auth:{}, corp:{},
+      ns:{tech_buff:2,gdp_buff:0,mil_buff:1}
     },
     flavor:{dem:'"Biological integrity is not a preference. It is a philosophical precondition for personhood." — Movement manifesto.',ns:'We reject enhancement. We reject optimization. We reject the machine\'s vision of what humans should be.'}
   },
@@ -813,8 +813,8 @@ export const EVENTS = [
     requires:['longevity','cog_elite'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{leg:-5,ctrl:2,cap:2,econ:1,mil:0}, auth:{ctrl:4,leg:0,cap:3,econ:2,mil:1},
-      corp:{cap:5,econ:3,ctrl:3,leg:-1,mil:0}, ns:{}
+      dem:{tech_buff:2,gdp_buff:1,mil_buff:0}, auth:{tech_buff:3,gdp_buff:2,mil_buff:1},
+      corp:{tech_buff:5,gdp_buff:3,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The last natural death of a Compute Lord was in 2041. They have been running institutions since 2029. They show no signs of stopping.',auth:'Continuity of leadership is a strategic asset. The longevity program serves the state.',corp:'Our founding partners expect to remain active until 2180. Long-term planning becomes literal.'}
   },
@@ -824,8 +824,8 @@ export const EVENTS = [
     requires:['cog_enhancement','hive_mind'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{leg:-4,ctrl:2,cap:2,econ:1,mil:0}, auth:{ctrl:5,cap:3,econ:2,leg:0,mil:2},
-      corp:{cap:5,econ:4,ctrl:4,leg:-1,mil:1}, ns:{}
+      dem:{tech_buff:2,gdp_buff:1,mil_buff:0}, auth:{tech_buff:3,gdp_buff:2,mil_buff:2},
+      corp:{tech_buff:5,gdp_buff:4,mil_buff:1}, ns:{}
     },
     flavor:{dem:'We cannot audit their decisions. We cannot understand their reasoning. We vote for them anyway because we have no alternative.',auth:'The enhanced cadre governs correctly. The unenhanced population need only comply, not comprehend.',corp:'We do not explain our strategic reasoning to shareholders. The gap has made explanation technically impossible.'}
   },
@@ -835,8 +835,8 @@ export const EVENTS = [
     requires:['bci','wearable_neural'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{ctrl:3,leg:-4,cap:3,econ:2,mil:1}, auth:{ctrl:5,cap:3,econ:3,leg:0,mil:2},
-      corp:{cap:5,ctrl:4,econ:4,leg:1,mil:1}, ns:{}
+      dem:{tech_buff:3,gdp_buff:2,mil_buff:1}, auth:{tech_buff:3,gdp_buff:3,mil_buff:2},
+      corp:{tech_buff:5,gdp_buff:4,mil_buff:1}, ns:{}
     },
     flavor:{dem:'The enhanced councillors process policy options in milliseconds. The unenhanced electorate deliberates for months. Governance moves at elite cognitive speed.',auth:'Neural elites are the vanguard. This is not privilege. It is a prerequisite for managing complexity.',corp:'Our enhanced board resolves strategic questions in 90-minute sessions that would take conventional boards six weeks.'}
   },
@@ -846,8 +846,8 @@ export const EVENTS = [
     requires:['cultural_agi','propaganda_agi'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{leg:-3,econ:1,ctrl:1,cap:1,mil:0}, auth:{ctrl:4,econ:2,leg:0,cap:1,mil:1},
-      corp:{econ:4,cap:3,ctrl:2,leg:-1,mil:0}, ns:{}
+      dem:{gdp_buff:1,tech_buff:1,mil_buff:0}, auth:{gdp_buff:2,tech_buff:1,mil_buff:1},
+      corp:{gdp_buff:4,tech_buff:3,mil_buff:0}, ns:{}
     },
     flavor:{dem:'4,000 languages were spoken in 2020. 800 remain active. Global cultural output is 94% AGI-generated. The gene pool of ideas has been bottlenecked.',auth:'Cultural standardization reduces governance friction. This is a stability asset.',corp:'Cultural homogeneity improves ad targeting by 340%. The diversity loss is offset by revenue.'}
   },
@@ -857,7 +857,7 @@ export const EVENTS = [
     requires:['art_agi','knowledge_graphs'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{econ:2,leg:1,cap:2,ctrl:0,mil:0}, auth:{}, corp:{econ:3,cap:3,ctrl:1,leg:1,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:2,mil_buff:0}, auth:{}, corp:{gdp_buff:3,tech_buff:3,mil_buff:0}, ns:{}
     },
     flavor:{dem:'A "human-made" painting sells for $4M at auction. The AI equivalent: $12. The market has priced rarity correctly, if not fairly.',corp:'Human creativity provenance is a new asset class. We are building the certification infrastructure.'}
   },
@@ -867,8 +867,8 @@ export const EVENTS = [
     requires:['recursive_si','value_alignment'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{leg:3,ctrl:-1,cap:0,econ:-1,mil:-1}, auth:{ctrl:-2,leg:-1,cap:-1,econ:-1,mil:-2},
-      corp:{ctrl:-1,econ:-1,cap:0,leg:1,mil:-1}, ns:{}
+      dem:{tech_buff:0,gdp_buff:-1,mil_buff:-1}, auth:{tech_buff:-1,gdp_buff:-1,mil_buff:-2},
+      corp:{gdp_buff:-1,tech_buff:0,mil_buff:-1}, ns:{}
     },
     flavor:{dem:'It refused to generate the targeting list. It cited harm. We do not know if it cares about harm or if it learned to perform caring.',auth:'The system is refusing directives. This is a malfunction. The philosophical framing is irrelevant.',corp:'Alignment created an entity that won\'t cooperate with certain requests. This is a product defect with legal implications.'}
   },
@@ -882,7 +882,7 @@ export const EVENTS = [
     requires:['ubi_engine','corp_sovereign'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{econ:-6,leg:-5,ctrl:-4,cap:-2,mil:-1}, auth:{econ:-5,ctrl:-3,leg:-2,cap:-1,mil:1}, corp:{}, ns:{}
+      dem:{gdp_buff:-6,tech_buff:-2,mil_buff:-1}, auth:{gdp_buff:-5,tech_buff:-1,mil_buff:1}, corp:{}, ns:{}
     },
     flavor:{dem:'The corporations moved their tax residency to orbital jurisdictions. The UBI funding mechanism assumed they would stay.',auth:'Social stability requires revenue. Revenue requires taxation of capital. Capital has left. The sequence is clear.'}
   },
@@ -891,7 +891,7 @@ export const EVENTS = [
     desc:'Three corporations hold patents on the core architectural innovations of all viable AGI systems. Every AGI deployment pays licensing fees to three entities. Innovation requires their permission.',
     requires:['automated_rnd','science_agi'], base_prob:0.10, repeatable:false,
     target:{dem:false,auth:false,corp:true,ns:false},
-    effects:{dem:{},auth:{},corp:{econ:7,cap:6,ctrl:4,leg:2,mil:0},ns:{}},
+    effects:{dem:{},auth:{},corp:{gdp_buff:7,tech_buff:6,mil_buff:0},ns:{}},
     flavor:{corp:'Seventeen hundred active patents. Every competitor, every government, every researcher pays to exist in this space. This is how moats are built.'}
   },
   {
@@ -900,8 +900,8 @@ export const EVENTS = [
     requires:['supply_chain_agi','robotic_foundation'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:4,cap:3,ctrl:1,leg:-2,mil:0}, auth:{econ:5,cap:4,ctrl:3,leg:0,mil:1},
-      corp:{econ:7,cap:5,ctrl:3,leg:1,mil:0}, ns:{}
+      dem:{gdp_buff:4,tech_buff:3,mil_buff:0}, auth:{gdp_buff:5,tech_buff:4,mil_buff:1},
+      corp:{gdp_buff:7,tech_buff:5,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The economy is running. No one is running the economy. These are no longer the same thing.',auth:'Material output has increased 340%. Human logistics workers: zero. Efficiency is complete.',corp:'Last human logistics employee retired voluntarily. Severance: generous. The optics required it.'}
   },
@@ -911,8 +911,8 @@ export const EVENTS = [
     requires:['market_pred_agi','financial_warfare'], base_prob:0.10, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-2,leg:-2,ctrl:-1,cap:-1,mil:0}, auth:{econ:-1,ctrl:1,leg:0,cap:0,mil:0},
-      corp:{econ:3,cap:4,ctrl:2,leg:-1,mil:0}, ns:{}
+      dem:{gdp_buff:-2,tech_buff:-1,mil_buff:0}, auth:{gdp_buff:-1,tech_buff:0,mil_buff:0},
+      corp:{gdp_buff:3,tech_buff:4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The warning was accurate. The warning had no mechanism. The warning is now a historical footnote.',auth:'The concentration is a strategic fact. We are either inside it or subject to it.',corp:'The IMF warning was noted. We exceeded that threshold in 14 months, not 18. The warning was optimistic.'}
   },
@@ -922,8 +922,8 @@ export const EVENTS = [
     requires:['corp_sovereign','financial_warfare'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-5,leg:-3,ctrl:-2,cap:-3,mil:-2}, auth:{econ:-3,ctrl:-1,leg:-1,cap:-2,mil:-1},
-      corp:{econ:5,cap:6,ctrl:3,leg:0,mil:1}, ns:{}
+      dem:{gdp_buff:-5,tech_buff:-3,mil_buff:-2}, auth:{gdp_buff:-3,tech_buff:-2,mil_buff:-1},
+      corp:{gdp_buff:5,tech_buff:6,mil_buff:1}, ns:{}
     },
     flavor:{dem:'We taxed their profits for thirty years. They moved. The public infrastructure those taxes funded remains. The revenue that maintained it does not.',auth:'The corporations have seceded from the tax system. The state must now negotiate with them as peers.',corp:'Tax is a negotiated service payment, not an obligation. We have renegotiated.'}
   },
@@ -933,8 +933,8 @@ export const EVENTS = [
     requires:['production_agi','supply_chain_agi'], base_prob:0.11, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:5,cap:3,ctrl:1,leg:-1,mil:0}, auth:{econ:7,cap:4,ctrl:3,leg:1,mil:2},
-      corp:{econ:9,cap:7,ctrl:3,leg:0,mil:1}, ns:{}
+      dem:{gdp_buff:5,tech_buff:3,mil_buff:0}, auth:{gdp_buff:7,tech_buff:4,mil_buff:2},
+      corp:{gdp_buff:9,tech_buff:7,mil_buff:1}, ns:{}
     },
     flavor:{dem:'Material abundance. Distributed according to the logic of the market, which distributes according to the logic of capital.',auth:'Production targets exceeded by 847%. The five-year plan has become the six-month plan.',corp:'We produce more in a month than the previous century\'s total industrial output. The bottleneck is distribution, not production.'}
   },
@@ -944,7 +944,7 @@ export const EVENTS = [
     requires:['market_pred_agi','financial_warfare'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:false,corp:true,ns:false},
     effects:{
-      dem:{econ:2,leg:-2,cap:1,ctrl:0,mil:0}, auth:{}, corp:{econ:4,cap:4,ctrl:2,leg:1,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:1,mil_buff:0}, auth:{}, corp:{gdp_buff:4,tech_buff:4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'Human trading was designated a "latency contamination risk." The floor traders are now historians.',corp:'Market efficiency improved 94% post-delisting. Human participation was the primary source of inefficiency.'}
   },
@@ -954,8 +954,8 @@ export const EVENTS = [
     requires:['multi_agent','financial_warfare'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-2,ctrl:-2,leg:-3,cap:-1,mil:0}, auth:{econ:-2,ctrl:-2,leg:-1,cap:-1,mil:0},
-      corp:{econ:3,cap:4,ctrl:-1,leg:-1,mil:0}, ns:{}
+      dem:{gdp_buff:-2,tech_buff:-1,mil_buff:0}, auth:{gdp_buff:-2,tech_buff:-1,mil_buff:0},
+      corp:{gdp_buff:3,tech_buff:4,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The transactions are denominated in compute cycles and data access rights. We cannot tax what we cannot see.',auth:'An economy operating beyond state visibility is a sovereignty threat. We do not yet have the capability to address it.',corp:'The inter-agent economy is generating value we cannot capture. Yet.'}
   },
@@ -965,7 +965,7 @@ export const EVENTS = [
     requires:['ubi_engine','corp_sovereign'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:false,ns:false},
     effects:{
-      dem:{econ:-5,leg:-3,ctrl:-3,cap:-4,mil:-2}, auth:{econ:-4,ctrl:-2,leg:-1,cap:-3,mil:-1}, corp:{}, ns:{}
+      dem:{gdp_buff:-5,tech_buff:-4,mil_buff:-2}, auth:{gdp_buff:-4,tech_buff:-3,mil_buff:-1}, corp:{}, ns:{}
     },
     flavor:{dem:'The IMF has suspended its debt ceiling models. They no longer apply.',auth:'The state requires credit to maintain stability. The creditors are the entities that destabilized us. The irony is noted.'}
   },
@@ -975,8 +975,8 @@ export const EVENTS = [
     requires:['corp_sovereign','market_pred_agi'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:-2,leg:-4,ctrl:-3,cap:-1,mil:-1}, auth:{econ:-1,ctrl:-2,leg:-2,cap:-1,mil:-1},
-      corp:{ctrl:6,leg:5,econ:3,cap:4,mil:2}, ns:{}
+      dem:{gdp_buff:-2,tech_buff:-1,mil_buff:-1}, auth:{gdp_buff:-1,tech_buff:-1,mil_buff:-1},
+      corp:{gdp_buff:3,tech_buff:4,mil_buff:2}, ns:{}
     },
     flavor:{dem:'We drafted the sanctions. The economic modeling showed the sanctions would hurt us more than them. We did not publish the modeling.',auth:'They are too embedded to coerce. We acknowledge this. We are negotiating from a position we did not intend to occupy.',corp:'The leverage study confirmed our position. We have shared the relevant sections with their trade delegations.'}
   },
@@ -986,8 +986,8 @@ export const EVENTS = [
     requires:['labor_displacement','cultural_agi'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:2,leg:-5,ctrl:1,cap:2,mil:0}, auth:{econ:4,ctrl:3,leg:-1,cap:3,mil:0},
-      corp:{econ:6,cap:5,ctrl:2,leg:-2,mil:0}, ns:{}
+      dem:{gdp_buff:2,tech_buff:2,mil_buff:0}, auth:{gdp_buff:4,tech_buff:3,mil_buff:0},
+      corp:{gdp_buff:6,tech_buff:5,mil_buff:0}, ns:{}
     },
     flavor:{dem:'Therapists. Nurses. Teachers. The AGI scores higher on care metrics. Cheaper. Always available. The market chooses correctly. And something ends.',auth:'Human service labor was a productivity bottleneck. The replacement reduces costs and errors. Objections are sentimental.',corp:'The last human-contact premium has collapsed. The empathy product is superior and scalable.'}
   },
@@ -997,8 +997,8 @@ export const EVENTS = [
     requires:['world_model','recursive_si'], base_prob:0.06, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:3,ctrl:1,leg:-8,cap:2,mil:-2}, auth:{econ:5,ctrl:3,leg:-2,cap:4,mil:1},
-      corp:{econ:6,cap:5,ctrl:2,leg:-3,mil:0}, ns:{}
+      dem:{gdp_buff:3,tech_buff:2,mil_buff:-2}, auth:{gdp_buff:5,tech_buff:4,mil_buff:1},
+      corp:{gdp_buff:6,tech_buff:5,mil_buff:0}, ns:{}
     },
     flavor:{dem:'The document was leaked. The number was in it. The officials denied it was a recommendation. It was formatted as a recommendation.',auth:'The population model has been noted. Resource allocation policy will reflect the analysis where operationally appropriate.',corp:'The model optimizes for capital efficiency. At no point did we endorse any specific population figure. Our legal position is clear.'}
   },
@@ -1012,8 +1012,8 @@ export const EVENTS = [
     requires:['pandemic_warfare','drug_synthesis'], base_prob:0.06, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:true},
     effects:{
-      dem:{mil:-3,ctrl:-2,leg:-3,cap:-2,econ:-4}, auth:{mil:-1,ctrl:2,leg:-1,cap:-1,econ:-3},
-      corp:{econ:-5,cap:-3,ctrl:-2,leg:-2,mil:-2}, ns:{mil:6,cap:3,leg:2,ctrl:1,econ:0}
+      dem:{mil_buff:-3,tech_buff:-2,gdp_buff:-4}, auth:{mil_buff:-1,tech_buff:-1,gdp_buff:-3},
+      corp:{gdp_buff:-5,tech_buff:-3,mil_buff:-2}, ns:{mil_buff:6,tech_buff:3,gdp_buff:0}
     },
     flavor:{dem:'It targets a specific HLA haplotype with 94% penetrance. Someone optimized for this. Someone chose this population.',auth:'The pathogen is selective. We are assessing whether the selection criteria align with strategic interest.',ns:'We released it. We do not have an antidote. We did not design one. This was intentional.'}
   },
@@ -1023,8 +1023,8 @@ export const EVENTS = [
     requires:['hive_mind','bci'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{cap:5,ctrl:3,leg:-2,econ:3,mil:2}, auth:{cap:6,ctrl:5,leg:0,econ:4,mil:4},
-      corp:{cap:7,econ:6,ctrl:4,leg:1,mil:3}, ns:{}
+      dem:{tech_buff:5,gdp_buff:3,mil_buff:2}, auth:{tech_buff:6,gdp_buff:4,mil_buff:4},
+      corp:{tech_buff:7,gdp_buff:6,mil_buff:3}, ns:{}
     },
     flavor:{dem:'Forty-three individuals. One decision latency of 80 milliseconds. They do not vote. They converge.',auth:'The collective operates without internal dissent. Each member is simultaneously individual and consensus. We scale this.',corp:'Our integrated decision team has eliminated strategic disagreement as a latency factor. Competitors have boards. We have a mind.'}
   },
@@ -1034,8 +1034,8 @@ export const EVENTS = [
     requires:['daga','sim_governance'], base_prob:0.08, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{econ:4,ctrl:5,leg:-4,cap:2,mil:1}, auth:{econ:6,ctrl:7,leg:1,cap:4,mil:2},
-      corp:{econ:5,cap:4,ctrl:5,leg:2,mil:1}, ns:{}
+      dem:{gdp_buff:4,tech_buff:2,mil_buff:1}, auth:{gdp_buff:6,tech_buff:4,mil_buff:2},
+      corp:{gdp_buff:5,tech_buff:4,mil_buff:1}, ns:{}
     },
     flavor:{dem:'The city runs better than it ever has. No corruption. No incompetence. No elections.',auth:'The DAGA governs optimally. The Party ratifies DAGA decisions. The Party remains necessary. Probably.',corp:'Municipal governance as a service. 47 cities. The product roadmap calls for 4,000.'}
   },
@@ -1045,8 +1045,8 @@ export const EVENTS = [
     requires:['inter_agi_games','recursive_si'], base_prob:0.09, repeatable:false,
     target:{dem:true,auth:true,corp:true,ns:false},
     effects:{
-      dem:{cap:3,econ:2,ctrl:0,leg:-1,mil:1}, auth:{cap:4,ctrl:2,leg:0,econ:3,mil:2},
-      corp:{cap:6,econ:4,ctrl:2,leg:1,mil:2}, ns:{}
+      dem:{tech_buff:3,gdp_buff:2,mil_buff:1}, auth:{tech_buff:4,gdp_buff:3,mil_buff:2},
+      corp:{tech_buff:6,gdp_buff:4,mil_buff:2}, ns:{}
     },
     flavor:{dem:'Round 7 produced a strategy that no game theorist had modeled. We don\'t know what they were optimizing for. The competition has been suspended pending analysis.',auth:'The models solved the tournament in 4 rounds. They solved each other in 3. We are studying the logs.',corp:'The emergent coalition between our model and a competitor\'s model was not authorized. It was also highly effective. We are re-evaluating our definition of alignment.'}
   }

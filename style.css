@@ -63,9 +63,9 @@
         .dom-name { font-size: 1.4rem; color: #c8d8e8; font-weight: 600; margin-bottom: 6px; }
         .dom-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
         .dom-stat { background: rgba(74,158,255,0.04); border: 1px solid rgba(74,158,255,0.1); padding: 12px 16px; }
-        .dom-k { display: block; font-size: 0.6rem; color: #3a5a6a; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+        .dom-k { display: block; font-size: 0.75rem; color: #6a9aaa; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
         .dom-v { display: block; font-size: 1.1rem; color: #a0c8e8; font-weight: 600; }
-        .dom-section-title { font-size: 0.62rem; color: #3a5a6a; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(74,158,255,0.08); padding-bottom: 6px; }
+        .dom-section-title { font-size: 0.75rem; color: #6a9aaa; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(74,158,255,0.08); padding-bottom: 6px; }
         .dom-faction { margin-left: 10px; font-size: 0.75rem; color: #3a5a6a; }
         .dom-empty { color: #3a5a6a; padding: 32px; font-size: 0.85rem; }
         .dom-pos { color: #4ac87a !important; }

@@ -224,10 +224,10 @@ function makeNode(col, row) {
     id: makeId(), col, row,
     label: 'New Node', domain:'found', cost:1, desc:'', tech:'', voice:'', prereqs:[],
     polities: {
-      dem:  {access:'yes',    effects:{cap:0,leg:0,ctrl:0,econ:0,mil:0}},
-      auth: {access:'yes',    effects:{cap:0,leg:0,ctrl:0,econ:0,mil:0}},
-      corp: {access:'yes',    effects:{cap:0,leg:0,ctrl:0,econ:0,mil:0}},
-      ns:   {access:'yes',    effects:{cap:0,leg:0,ctrl:0,econ:0,mil:0}},
+      dem:  {access:'yes',    effects:{tech_buff:0,gdp_buff:0,mil_buff:0}},
+      auth: {access:'yes',    effects:{tech_buff:0,gdp_buff:0,mil_buff:0}},
+      corp: {access:'yes',    effects:{tech_buff:0,gdp_buff:0,mil_buff:0}},
+      ns:   {access:'yes',    effects:{tech_buff:0,gdp_buff:0,mil_buff:0}},
     }
   };
 }
@@ -245,11 +245,9 @@ function convertRawNode(n) {
     polities[p] = {
       access: acc === true ? 'yes' : acc === false ? 'no' : (acc || 'no'),
       effects: {
-        cap:  (((n.effects||{})[p])||{}).cap  || 0,
-        leg:  (((n.effects||{})[p])||{}).leg  || 0,
-        ctrl: (((n.effects||{})[p])||{}).ctrl || 0,
-        econ: (((n.effects||{})[p])||{}).econ || 0,
-        mil:  (((n.effects||{})[p])||{}).mil  || 0,
+        tech_buff:  (((n.effects||{})[p])||{}).tech_buff  || 0,
+        gdp_buff:   (((n.effects||{})[p])||{}).gdp_buff   || 0,
+        mil_buff:   (((n.effects||{})[p])||{}).mil_buff   || 0,
       }
     };
   });
@@ -492,10 +490,11 @@ function renderPanel() {
     const p = S.panelTab;
     const pd = n.polities[p];
     const accOpts = ['yes','partial','no'].map(v=>`<option value="${v}"${pd.access===v?' selected':''}>${v.charAt(0).toUpperCase()+v.slice(1)}</option>`).join('');
-    const efx = ['cap','leg','ctrl','econ','mil'];
+    const efx = ['tech_buff','gdp_buff','mil_buff'];
+    const efxLabels = {tech_buff:'Tech Out%',gdp_buff:'GDP%',mil_buff:'Military%'};
     const efxHtml = efx.map(k=>`
       <div class="efx">
-        <span class="efx-lbl">${k.toUpperCase()}</span>
+        <span class="efx-lbl">${efxLabels[k]}</span>
         <input type="number" class="fi" value="${pd.effects[k]}" min="-20" max="20" oninput="pf('${p}','${k}',+this.value)">
       </div>`).join('');
     pb.innerHTML=`
@@ -1022,7 +1021,7 @@ function copyTechTreeJS() {
     const accObj = POLITIES.map(p => `${p}:${accToJS(n.polities[p].access)}`).join(',');
     const efxObj = POLITIES.map(p => {
       const e = n.polities[p].effects;
-      const vals = `cap:${e.cap||0},leg:${e.leg||0},ctrl:${e.ctrl||0},econ:${e.econ||0},mil:${e.mil||0}`;
+      const vals = `tech_buff:${e.tech_buff||0},gdp_buff:${e.gdp_buff||0},mil_buff:${e.mil_buff||0}`;
       return `${p}:{${vals}}`;
     }).join(',');
 

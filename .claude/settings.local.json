@@ -10,7 +10,13 @@
       "Bash(python gen_normal.py)",
       "Bash(python3:*)",
       "Bash(node -e \":*)",
-      "Bash(node --check \"c:/Users/qli/Desktop/IT/2603_theLastDayOfAIs/globe.js\")"
+      "Bash(node --check \"c:/Users/qli/Desktop/IT/2603_theLastDayOfAIs/globe.js\")",
+      "Bash(node -e \"const d=require\\('./data/softpower.json'\\); const c=d.countries; console.log\\('Countries:', c.length\\); for\\(const[k,v] of Object.entries\\(d.data\\)\\){if\\(v.length!==c.length\\)console.log\\('BAD:',k,v.length\\);} console.log\\('All rows checked. Self-values:'\\); for\\(const[k,v] of Object.entries\\(d.data\\)\\){const i=c.indexOf\\(k\\); if\\(v[i]!==0\\)console.log\\(k,'self not 0:',v[i]\\);} console.log\\('Done'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(node -e \"const d=require\\('/tmp/sp_check.json'\\); for\\(const[k,v] of Object.entries\\(d.data\\)\\){const s=v.reduce\\(\\(a,b\\)=>a+b,0\\); if\\(s!==100\\) console.log\\(k,'sum=',s\\);} console.log\\('Validation done'\\)\")",
+      "Bash(node -e \"const d=require\\('./data/softpower.json'\\); const c=d.countries; let ok=true; for\\(const[k,v] of Object.entries\\(d.data\\)\\){const s=Math.round\\(v.reduce\\(\\(a,b\\)=>a+b,0\\)*10\\)/10; if\\(Math.abs\\(s-100\\)>0.5\\){console.log\\(k,'sum=',s\\);ok=false;} const si=c.indexOf\\(k\\); if\\(v[si]<20\\)console.log\\(k,'self=',v[si],'\\(low?\\)'\\);} if\\(ok\\)console.log\\('All rows ~100%'\\); console.log\\('USA self=',d.data.USA[0],'CHN self=',d.data.CHN[1],'PRK self=',d.data.PRK[13]\\)\")",
+      "Bash(node:*)",
+      "Bash(python -c ':*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\qli\\Desktop\\IT"

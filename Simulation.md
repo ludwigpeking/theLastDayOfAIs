@@ -169,11 +169,10 @@ non-states goal is too have more state in control.
 - Islamic Cooperation Organization - authoritarian traditionalism, anti-AI, event: [AGI banning - forbid higher level AI, defence of the god]
 - green peace - anti-AI, event: [something triggered by dissent from tech disaster - popularity gain from AI warfare and unemployment, total war against AI - controlled states banning AI and war with technocrat controalled states]
 - the Mars Society - techno-optimism, pro-AI, elitist, can trigger the event of colonizing mars
-- hamas // to remove
+
 - al qaeda - anti-US, endless war with the US
 - wagner group - authoritarian international mafia. banned by all democrats. events: [mercenary war - a state can hire wagner to the war adding military power in risk of wagner growth and coup, coup will result in removal from the state or 3x share in the state] 
 - Open Society Foundations (Soros) - anti-totalitarian, anti-authoritarian. events: [color revolution - can infiltrate a country, no need to exist in it]
-- Bilderberg group -  //to remove
 - Illuminati - pro-AI elitism. events: []
 each has an independent ideology. the followers in each country contribute to its resources.
 
@@ -230,43 +229,15 @@ offensive war: reduce
 
 ## Tech Tree Effects → Game Stats
 
-Each tech in the tree produces five effect values per polity type: **cap** (capability), **leg** (legitimacy), **ctrl** (control), **econ** (economic), **mil** (military). When a tech is researched, these numbers translate into concrete stat changes depending on who researched it.
+Each tech in the tree produces three stat-based effect values per polity type. When a tech is researched, these accumulate as permanent buffs in `G.techBuffs`.
 
-### For States (major & minor country leaders)
-
-| Effect | Stat changed | How |
+| Stat Effect | What it does | How it applies |
 | :--- | :--- | :--- |
-| **cap** | AGI progress | +cap × 0.5% to global AGI progress bar |
-| **leg** | Legitimacy | +leg directly to the country's legitimacy score (0–100). Negative leg erodes legitimacy. |
-| **ctrl** | Security | +ctrl × 2 to the country's security rating. High ctrl also slows ideological drift from soft power. |
-| **econ** | GDP multiplier | +econ × 1% permanent GDP buff (stacks with infrastructure and literacy). |
-| **mil** | Military power | +mil × 3% permanent military multiplier. |
+| **tech_buff** | Tech output multiplier | +N% to tech output calculation. Boosts research speed and tech-dependent income. |
+| **gdp_buff** | GDP multiplier | +N% permanent GDP buff (stacks with infrastructure, literacy, and base techBuff). |
+| **mil_buff** | Military cost reduction | Reduces military maintenance cost by N%. Maintenance = milSize × 14% × (1 − mil_buff%). Floor at 10% of base. |
 
-Legitimacy below 30 causes infrastructure decay (–1/turn). Security below 20 makes the country vulnerable to coups, regime change, and NSA infiltration.
-
-### For Corporations (Big Tech CEOs)
-
-| Effect | Stat changed | How |
-| :--- | :--- | :--- |
-| **cap** | R&D efficiency | Reduces the PP cost of future techs by cap × 2%. |
-| **leg** | Public trust | +leg improves the corp's ability to enter new markets without boycott risk. Negative leg increases boycott probability. |
-| **ctrl** | Market lock-in | +ctrl × 0.5% market share growth in all countries where the corp operates. |
-| **econ** | Revenue multiplier | +econ × 2% permanent revenue buff across all markets. |
-| **mil** | Private military | +mil × 2 to the corp's private military capacity (if formed). Without a private army, mil points accumulate as latent capacity. |
-
-Corps have income (revenue = sum of GDP × market share across countries) and expenses (R&D costs, market expansion, private army maintenance). Net PP per turn = base income + revenue × 0.02 − expenses.
-
-### For Non-State Actors
-
-| Effect | Stat changed | How |
-| :--- | :--- | :--- |
-| **cap** | Operational reach | +cap expands the number of countries the NSA can operate in simultaneously. |
-| **leg** | Ideological credibility | +leg × 0.5% follower growth rate in all countries where the NSA has presence. Negative leg causes follower attrition. |
-| **ctrl** | Infiltration depth | +ctrl increases the NSA's influence-per-follower, making each percentage of population share more impactful on ideology drift. |
-| **econ** | Funding efficiency | +econ × 1% to the NSA's income from follower-weighted GDP. |
-| **mil** | Armed capacity | +mil × 2 to the NSA's private army (if formed). Armed NSAs can launch cyber attacks, info warfare, and even war. |
-
-NSAs have income (0.1 × sum of follower share × country GDP across all countries) and expenses (ideological campaigns, armed operations). Follower share is the fraction of a country's population that follows the NSA.
+These effects apply identically to all polity types (states, corporations, non-state actors) — but each tech specifies different values per polity (dem, auth, corp, ns), so the same tech may benefit one polity type more than another.
 
 ### Income and Expenses Summary
 
@@ -303,4 +274,159 @@ NSAs have income (0.1 × sum of follower share × country GDP across all countri
 | - Illuminati - | | | | | | 600% |
 
 **The Effect is to be multiplied by the share**
+
+
+Here are the key formulas and mechanics in the game: 
+
+GDP Formula
+GDP = population × √(infrastructure) × literacy⁴ × internet × (1 + techBuff)                                                                        
+techBuff = 5% per researched tech, capped at  100%                                                                                                                                                                                                                                                       
+  Military Formula                                                                                                                                    
+
+  Military = GDP / 10 × (1 + techBuff)
+
+  Power Point Income Per Turn
+
+  Nation-States:
+  Income = Base (100 major / 60 minor) + GDP/100 - expenses
+  Expenses = (GDP/100 × social_cost) + (military/25 × (1 + mil_cost))
+  Minimum income: 10 PP
+  Plus +3 PP per researched technology.
+
+  Corporations: 80 + Σ(country GDP × market share / 100) × 0.02
+
+  Non-State Actors: 50 + Σ(size × country GDP) × 0.05
+
+  Ideology Cost Modifiers
+
+  ┌───────────────┬─────────────┬───────────────┐
+  │   Ideology    │ Social Cost │ Military Cost │
+  ├───────────────┼─────────────┼───────────────┤
+  │ Totalitarian  │ +25%        │ -50%          │
+  ├───────────────┼─────────────┼───────────────┤
+  │ Authoritarian │ +35%        │ -100%         │
+  ├───────────────┼─────────────┼───────────────┤
+  │ Democracy     │ +20%        │ (normal)      │
+  └───────────────┴─────────────┴───────────────┘
+
+  Action Costs (sample)
+
+  - AI Tech Tree: 65-80 PP (cheapest for totalitarian)
+  - Infrastructure: 50-60 PP
+  - Espionage: 40-50 PP
+  - Launch War: 200 PP (authoritarian) / Total War: 250 PP (totalitarian)
+  - Puppetify State: 130-150 PP
+  - Form League of Nations: 120 PP (democracy only)
+
+## tech output
+
+### a country's tech output = 
+sum(economy sector GDP * sector tech multiplier) * (1 + Buff)
+
+sector tech multipliers:
+government: 0.01
+major companies: 0.1
+minor companies: 0.03
+
+major companies also have special buff
+
+### corporation's tech output =
+sum(country GDP * market share) * corp tech multiplier * (1 + Buff)
+major companies: 0.15
+
+### non-state actor's tech output =
+sum(country GDP * follower share) * NSA tech multiplier * (1 + Buff)
+NSA tech multiplier: 0.03
+
+## surveillance spending
+
+
+## soft power projection
+each country has a soft power projection in each other country
+
+### starting soft power projection: 
+it is a 30 country to 30 country relation.
+strong soft powers: US, EU, Japan, UK, China, South Korea
+each country has relative strong soft power on itself
+US, EU, UK has strong projection over most of the world
+Japan too, but more in asia, particularly in South Korea, Taiwan,  Vietnam, and China
+China is strong newly, relatively weak to traditional cultural powers.
+India is strong only regionally.
+make it case by case for each country. movie, cartoon, music consumption is a good indicator of soft power projection.
+
+### soft power projection causes ideological drift
+
+ideological drift = sum(soft power projection from each other country * sum(input country's ideology shares)) * internet openness * 0.1
+for example, japan has 40% democracy, 15% buddhism, if you receive 10% soft power projection from Japan, you get 10% * 40% * 0.1 = 0.4% drift towards democracy, and 0.15% drift towards buddhism.
+
+## Actions
+
+Every turn, each entity spends power points (PP) on actions. The available actions, their targets, and effects depend on the actor type and regime.
+
+### State Actions (by regime)
+
+| Action | Available to | Target | Cost (PP) | Effect |
+| :--- | :--- | :--- | :---: | :--- |
+| Invest in AI Tech Tree | all regimes | self | 65–80 | add tech expenses Buff 10% for a turn |
+| Invest in Infrastructure | all regimes | self | 50–60 | own infra + fund/population * buff  |
+| Invest in Literacy | democracy | self | 50 | own literacy + fund/population * buff |
+| Cyber Defense | democracy | self | 45 | enemy cyber attacks success ratedebuff |
+| Espionage | dem/auth/tot | foreign country | 40–50 | success rate = tech tree distance, if sucsses target  military expenses debuff |
+| Cyber Attack | auth/tot | foreign country | 55–65 | success rate = tech tree distance, if sucsses target  tech debuff, own tech buff |
+| Information Warfare | auth/tot | foreign country | 45–55 | target ideology drift toward own ideology spectrum |
+| Soft Power Campaign | democracy | foreign country | 40 | own SP projection buff |
+| Boycott | all except alib | foreign country | 30–35 | target GDP −5% for one turn |
+| Puppetify State | auth/tot | foreign minor | 130–150 | //this should be removed, put into war result |
+| Lock Down Internet | totalitarian | self | 45 | own internet openness −10% (reduces GDP but blocks soft power drift) |
+| Form League of Nations | democracy | self | 120 | join the defensive alliances, auto-join a defensive war |
+| Launch War | authoritarian | foreign country | 200 | military contest; loser: entering war as the aggressor, details see "wars" |
+| Total War | totalitarian | foreign country | 250 | same as war but with higher capacity at civilianpopulation loss |
+
+### NPC State Behavior (AI-controlled)
+Each NPC state gets 1–2 actions per turn based on GDP tier. Actions are chosen by weighted random selection according to regime priorities: same options as player states
+
+### Corporation Actions
+
+| Action | Target | Cost (PP) | Effect |
+| :--- | :--- | :---: | :--- |
+| Invest in AI Tech Tree | self | 60 | tech output buff |
+| Invest in Country | foreign country | 50 | share + fund/GDP of target/7 |
+| Lobbying | any country | 70 | success rate, if success prevents boycotts in 3 turns |
+| Form Private Army | self | 200 | triggered by event, can join a side in a war |
+| Cyber Attack | foreign country | 90 | success rate = tech tree distance, if sucsses target  tech debuff, own tech buff |
+| Information Warfare | auth/tot | foreign country | 45–55 | target ideology drift toward home state ideology spectrum |
+
+### NPC Corporation Behavior
+Each NPC corp takes 1 action per turn same as player corps, with weighted random selection based on market strategy (e.g. aggressive expansion vs. tech focus).
+
+### Non-State Actor Actions
+
+| Action | Target | Cost (PP) | Effect |
+| :--- | :--- | :---: | :--- |
+| Invest in AI Tech Tree | self | 70 | tech output buff |
+| Spread Ideology "mission" | foreign country | 45 |  (causes ideological drift toward NSA's ideology) |
+| Add Influence | foreign country | 55 | own follower share in target grows  |
+| Form Private Army | self | 170 |  |
+| Disrupt Infrastructure | any state | 95 | target infra reduction |
+
+### NPC Non-State Actor Behavior
+Each NPC NSA takes 1 action per turn, behavior varies by ideology:
+- **Al-Qaeda / Wagner**: grow in unstable or authoritarian countries (share +0.5%); Al-Qaeda also destabilizes (security −3, legitimacy −2)
+- **Open Society (Soros)**: grow in authoritarian/totalitarian countries (share +0.8%), boost target legitimacy +2
+- **Greenpeace**: grow in democracies (share +0.6%)
+- **Mars Society**: grow in major high-GDP powers (share +0.6%)
+- **Catholic / Islamic / Buddhist**: spread to countries sharing faction or regime alignment (share +0.4%)
+
+### Automatic Effects (per turn)
+These happen automatically during simulation tick, not as player actions:
+- **Soft power ideological drift**: each country's ideology shares shift toward the weighted ideology mix of countries projecting soft power into it, scaled by internet openness × 0.1
+- **Military maintenance**: 14% of milSize per turn; surplus spending grows military, deficit shrinks it
+- **Regime change**: if the dominant polity faction shifts, the country's regime changes accordingly
+- **Security/legitimacy recovery**: natural drift toward baseline each turn
+
+## Social Costs
+
+### infrastructure maintenance cost
+infrastructure maintenance cost = population × infrastructure level /100 per turn
+if infrastructure maintenance cost is not paid, infrastructure level will decay by 7% x shortage percentage per turn.
 
